@@ -23,6 +23,7 @@
 	int var_cnt;
 	int var_size;
 	int line;
+	bool is_array_element;
 
     FILE* fin = NULL;     /* input file */
     FILE* ftable = NULL;  /* the file which store the table output */
@@ -91,7 +92,7 @@
 %token <number> NUMBER
 %token <ident> IDENT CHAR INT 
 
-%type <number> get_pcode_addr get_table_addr type
+%type <number> get_pcode_addr get_table_addr type var
 
 %%
 
@@ -112,6 +113,9 @@ main_function
 		gen(ini, 0 ,var_size+3);
 	}
 	statement_list RB
+	{
+		gen(opr, 0, 0);
+	}
 	;
 
 get_pcode_addr
@@ -163,7 +167,15 @@ type
 
 var	
 	: IDENT 
+	{
+		$$ = position($1);
+		is_array_element = false;
+	}
     | IDENT LSB expression RSB
+	{
+		$$ = position($1);
+		is_array_element = true;
+	}
     ;
 
 statement_list
@@ -190,11 +202,22 @@ while_stat
     ;
 
 write_stat
-	: WRITE expression SEMI
+	: WRITE var SEMI
+	{
+		if(is_array_element) gen(lod, -1, table[$2].adr);
+		else gen(lod, lev - table[$2].level, table[$2].adr);
+		gen(opr, 0, 14);
+		gen(opr, 0, 15);
+	}
     ;
 
 read_stat
 	: READ var SEMI
+	{
+		gen(opr, 0, 16);
+		if(is_array_element) gen(sto, -1, table[$2].adr);
+		else gen(sto, lev - table[$2].level, table[$2].adr);
+	}
     ;
 
 compound_stat
@@ -213,12 +236,30 @@ expression
 
 simple_expr
 	: additive_expr 
+	| additive_expr EQL additive_expr
+	{
+		gen(opr, 0, 8);
+	}
     | additive_expr NEQ additive_expr
+	{
+		gen(opr, 0, 9);
+	}
+	| additive_expr LSS additive_expr
+	{
+		gen(opr, 0, 10);
+	}
     | additive_expr GEQ additive_expr
+	{
+		gen(opr, 0, 11);
+	}
+	| additive_expr GTR additive_expr
+	{
+		gen(opr, 0, 12);
+	}
     | additive_expr LEQ additive_expr
-    | additive_expr GTR additive_expr
-    | additive_expr LSS additive_expr
-    | additive_expr EQL additive_expr
+	{
+		gen(opr, 0, 13);
+	}
     ;
 
 additive_expr
@@ -227,17 +268,25 @@ additive_expr
     | additive_expr MINUS term 
     ;
 
-
 term
 	: factor
     | term MUL factor
+	{
+		gen(opr, 0 ,4);
+	}
     | term DIV factor
+	{
+		gen(opr, 0 ,5);
+	}
     ;
 
 factor
 	: LP expression RP 
     | var 
     | NUMBER
+	{
+		gen(lit, 0, $1);
+	}
     ;
 
 %%
@@ -268,9 +317,7 @@ int position(char* a)
 void table_add(enum object item)
 {
 	table_pointer++;
-	printf("id = %s\n",id);
 	strcpy(table[table_pointer].name, id);
-	printf("name = %s\n",table[table_pointer].name);
 	table[table_pointer].kind = item;
 	switch(item)
 	{
@@ -367,7 +414,156 @@ void display_table()
 
 void interpret()
 {
+	int p = 0; /* 指令指针 */
+	int b = 1; /* 指令基址 */
+	int t = 0; /* 栈顶指针 */
+	struct instruction i;
+	int s[stacksize];	
 
+	printf("Start X0\n");
+	fprintf(fout,"Start X0\n");
+	s[0] = 0; /* s[0]不用 */
+	s[1] = 0; /* 主程序的三个联系单元均置为0 */
+	s[2] = 0;
+	s[3] = 0;
+	do {
+	    i = pcode[p];	/* 读当前指令 */
+		p = p + 1;      
+		switch (i.f)
+		{
+			case lit:	/* 将常量a的值取到栈顶 */
+				t = t + 1;
+				s[t] = i.a;				
+				break;
+			case opr:	/* 数学、逻辑运算 */
+				switch (i.a)
+				{
+					case 0:  /* 函数调用结束后返回 */
+						t = b - 1;
+						p = s[t + 3];
+						b = s[t + 2];
+						break;
+					case 1: /* 栈顶元素取反 */
+						s[t] = - s[t];
+						break;
+					case 2: /* 次栈顶项加上栈顶项，退两个栈元素，相加值进栈 */
+						t = t - 1;
+						s[t] = s[t] + s[t + 1];
+						break;
+					case 3:/* 次栈顶项减去栈顶项 */
+						t = t - 1;
+						s[t] = s[t] - s[t + 1];
+						break;
+					case 4:/* 次栈顶项乘以栈顶项 */
+						t = t - 1;
+						s[t] = s[t] * s[t + 1];
+						break;
+					case 5:/* 次栈顶项除以栈顶项 */
+						t = t - 1;
+						s[t] = s[t] / s[t + 1];
+						break;
+					case 6:/* 栈顶元素的奇偶判断 */
+						s[t] = s[t] % 2;
+						break;
+					case 8:/* 次栈顶项与栈顶项是否相等 */
+						t = t - 1;
+						s[t] = (s[t] == s[t + 1]);
+						break;
+					case 9:/* 次栈顶项与栈顶项是否不等 */
+						t = t - 1;
+						s[t] = (s[t] != s[t + 1]);
+						break;
+					case 10:/* 次栈顶项是否小于栈顶项 */
+						t = t - 1;
+						s[t] = (s[t] < s[t + 1]);
+						break;
+					case 11:/* 次栈顶项是否大于等于栈顶项 */
+						t = t - 1;
+						s[t] = (s[t] >= s[t + 1]);
+						break;
+					case 12:/* 次栈顶项是否大于栈顶项 */
+						t = t - 1;
+						s[t] = (s[t] > s[t + 1]);
+						break;
+					case 13: /* 次栈顶项是否小于等于栈顶项 */
+						t = t - 1;
+						s[t] = (s[t] <= s[t + 1]);
+						break;
+					case 14:/* 栈顶值输出 */
+						printf("%d", s[t]);
+						fprintf(fout, "%d", s[t]);
+						t = t - 1;
+						break;
+					case 15:/* 输出换行符 */
+						printf("\n");
+						fprintf(fout,"\n");
+						break;
+					case 16:/* 读入一个输入置于栈顶 */
+						t = t + 1;
+						printf("?");
+						fprintf(fout, "?");
+						scanf("%d", &(s[t]));
+						fprintf(fout, "%d\n", s[t]);						
+						break;
+				}
+				break;
+			case lod:	/* 取相对当前过程的数据基地址为a的内存的值到栈顶 */
+				if(i.l >= 0)
+				{
+					t = t + 1;
+					s[t] = s[i.a+1];	
+				}
+				else
+				{
+					s[t] = s[i.a+s[t]+1];
+				}
+				break;
+			case sto:	/* 栈顶的值存到相对当前过程的数据基地址为a的内存 */
+				if(i.l >= 0)
+				{
+					s[1+i.a] = s[t];
+					t = t - 1;
+				}
+				else
+				{
+					s[i.a+s[t-1]+1] = s[t];
+					t = t - 2;
+				}
+				break;
+			case cal:	/* 调用子过程 */
+				s[t + 1] = base(i.l, s, b);	/* 将父过程基地址入栈，即建立静态链 */
+				s[t + 2] = b;	/* 将本过程基地址入栈，即建立动态链 */
+				s[t + 3] = p;	/* 将当前指令指针入栈，即保存返回地址 */
+				b = t + 1;	/* 改变基地址指针值为新过程的基地址 */
+				p = i.a;	/* 跳转 */
+				break;
+			case ini:	/* 在数据栈中为被调用的过程开辟a个单元的数据区 */
+				t = t + i.a;	
+				break;
+			case jmp:	/* 直接跳转 */
+				p = i.a;
+				break;
+			case jpc:	/* 条件跳转 */
+				if (s[t] == 0) 
+					p = i.a;
+				t = t - 1;
+				break;
+		}
+	} while (p != 0);
+	printf("End X0\n");
+	fprintf(fout,"End X0\n");
+}
+
+int base(int l, int* s, int b)
+{
+	int b1;
+	b1 = b;
+	while (l > 0)
+	{
+		b1 = s[b1];
+		l--;
+	}
+	return b1;
 }
 
 int main(){

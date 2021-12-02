@@ -268,22 +268,7 @@ Vardef: var
         ++varx;
     }
     ;
-Constdecl:
-    CONST CONSTInit SEMI Constdecl
-    |
-    ;
-CONSTInit:
-    constdef
-    |CONSTInit COMMA constdef
-    ;
-constdef:
-    var EQL num
-    {
-        strcpy(id, $1);
-        c_num = $3;
-        _enter(constant, 0);
-    }
-    ;
+
 
 /*statement */
 var_p :var
@@ -307,12 +292,10 @@ statements :
     ;
 statement:
        asgnstm_semi
-    |   callstm
     |   ifstm
     |   whilestm
     |   readstm
     |   writestm
-    |   forstm
     |   returnstm
     ;
 asgnstm_semi: asgnstm_tot SEMI;
@@ -396,43 +379,7 @@ asgnstm:
         }
     }
     ;
-callstm:
-    ;
-forstm:
-    FOR LP 
-    for_1 SEMI get_code_addr condition get_code_addr
-    {
-        gen(jpc, 0, 0);
-    }
-    SEMI for_3 RP get_sto
-    compstm
-    {
-        gen(jmp, 0, $5);
-        printf("jpc = %d\n", $7);
-        code[$7].a = cx;
-    }
-    ;
-for_1:  asgnstm_tot |
-    ;
-for_2: condition |
-    ;
-for_3:  asgnstm
-    |   asgnstm COMMA for_3
-    ;
-for_asgn:var_p EQL expression
-    {
-        if($1 == 0){
-            yyerror("Symbol not Exist\n");
-        }
-        else{
-            if(table[$1].kind != variable) yyerror("Symbol not variable\n");
-            else{
-                fortable[forx] = $1;
-                forx ++;
-            }
 
-        }
-    }
 
 ifstm: IF LP condition RP get_code_addr
     {
@@ -574,40 +521,6 @@ factor: var_p
         gen(lit, 0, $1);
     }
     | LP expression RP
-    |call_func
-    ;
-call_func:
-    var_p 
-    {
-        ++px;
-        proctable[px] = $1;
-    }
-    LP pass_factor RP
-    {
-        if(table[$1].kind != procedure) yyerror("Is  not a procedure \n");
-        else{
-            if($4 !=  table[$1].parameter_cnt ) yyerror("parameter number not match\n");
-            gen(cal, 0, table[$1].adr);
-            if(table[$1].t != xvoid) gen(lod, -1, 0); /* get return */
-        }
-    }
-    ;
-
-pass_factor: factor {$$ = 1;}
-    | factor COMMA pass_factor
-        {$$ = 1 + $3;}
-    | {$$ = 0;}
-    ;
-
-get_table_addr:
-    {
-        $$ = tx;
-    }
-    ;
-get_code_addr:
-    {
-        $$ = cx;
-    }
     ;
 %%
 

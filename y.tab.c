@@ -92,6 +92,7 @@
 	int var_cnt;
 	int var_size;
 	int line;
+	bool is_array_element;
 
     FILE* fin = NULL;     /* input file */
     FILE* ftable = NULL;  /* the file which store the table output */
@@ -148,7 +149,7 @@
     void interpret();
     int base(int l, int* s, int b);
 
-#line 152 "y.tab.c"
+#line 153 "y.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -260,12 +261,12 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 83 "X0.y"
+#line 84 "X0.y"
 
     int number;
     char* ident;
 
-#line 269 "y.tab.c"
+#line 270 "y.tab.c"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -584,7 +585,7 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  3
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   101
+#define YYLAST   100
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  31
@@ -641,13 +642,13 @@ static const yytype_int8 yytranslate[] =
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
-static const yytype_uint8 yyrline[] =
+static const yytype_int16 yyrline[] =
 {
-       0,   101,   101,   105,   110,   100,   119,   132,   133,   134,
-     138,   147,   160,   161,   165,   166,   170,   171,   175,   176,
-     177,   178,   179,   180,   184,   185,   189,   193,   197,   201,
-     205,   206,   210,   211,   215,   216,   217,   218,   219,   220,
-     221,   225,   226,   227,   232,   233,   234,   238,   239,   240
+       0,   102,   102,   106,   111,   101,   123,   136,   137,   138,
+     142,   151,   164,   165,   169,   174,   182,   183,   187,   188,
+     189,   190,   191,   192,   196,   197,   201,   205,   215,   224,
+     228,   229,   233,   234,   238,   239,   240,   241,   242,   243,
+     244,   248,   249,   250,   254,   255,   259,   266,   267,   268
 };
 #endif
 
@@ -679,7 +680,7 @@ static const yytype_int16 yytoknum[] =
 };
 # endif
 
-#define YYPACT_NINF (-54)
+#define YYPACT_NINF (-65)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
@@ -693,15 +694,15 @@ static const yytype_int16 yytoknum[] =
      STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-     -54,     8,   -54,   -54,    -5,   -54,     7,    -3,   -54,   -54,
-      -3,   -54,    17,   -54,   -54,   -10,    31,    23,   -54,    12,
-     -54,   -54,   -54,    44,    33,    12,    52,   -54,    56,    43,
-     -54,   -54,   -54,   -54,   -54,   -54,   -54,    57,   -54,    73,
-       9,   -54,    72,    65,    47,    12,    71,    74,    12,    12,
-      12,   -54,    12,    12,    12,    12,    12,    12,    12,    12,
-      12,    12,    75,   -54,   -54,    78,   -54,   -54,    79,    80,
-     -54,   -54,     9,     9,    61,    61,    61,    61,    61,    61,
-     -54,   -54,   -54,    -4,    -4,   -54,    77,   -54,    -4,   -54
+     -65,    16,   -65,   -65,    26,   -65,    35,   -21,   -65,   -65,
+     -21,   -65,    25,   -65,   -65,     6,   -10,    30,   -65,    -6,
+     -65,   -65,   -65,    48,    36,    36,    50,   -65,    49,    39,
+     -65,   -65,   -65,   -65,   -65,   -65,   -65,    53,   -65,    73,
+      -2,   -65,    51,    63,    31,    -6,    59,    72,    -6,    -6,
+      -6,   -65,    -6,    -6,    -6,    -6,    -6,    -6,    -6,    -6,
+      -6,    -6,    74,   -65,   -65,    79,   -65,   -65,    81,    78,
+     -65,   -65,    -2,    -2,    22,    22,    22,    22,    22,    22,
+     -65,   -65,   -65,    47,    47,   -65,    75,   -65,    47,   -65
 };
 
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -723,9 +724,9 @@ static const yytype_int8 yydefact[] =
   /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -54,   -54,   -54,   -54,   -54,   -54,   -54,    86,   -54,   -24,
-      81,   -35,   -54,   -54,   -54,   -54,   -54,   -54,    -7,   -54,
-     -53,    34,    28
+     -65,   -65,   -65,   -65,   -65,   -65,   -65,    88,   -65,   -24,
+      80,   -64,   -65,   -65,   -65,   -65,   -65,   -65,    -7,   -65,
+      32,   -13,   -12
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
@@ -741,32 +742,32 @@ static const yytype_int8 yydefgoto[] =
      number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-      46,    74,    75,    76,    77,    78,    79,    17,     3,    19,
-      18,    20,    43,    60,     5,    61,    22,    23,    47,    24,
-      25,    26,     7,    27,    28,    19,     8,     9,    71,    71,
-      71,    71,    71,    71,    71,    71,    71,    71,    65,    27,
-      28,    68,    69,    70,    19,    15,    20,    21,    86,    87,
-      42,    22,    23,    89,    24,    25,    26,    45,    27,    28,
-      19,    28,    20,    64,    52,    48,    53,    22,    23,    50,
-      24,    25,    26,    49,    27,    28,    52,    51,    53,    63,
-      54,    55,    56,    57,    58,    59,    72,    73,    80,    81,
-      62,    66,    83,    84,    67,    82,    14,     0,    85,    88,
-       0,    44
+      46,    47,    60,    19,    61,    20,    21,    19,     8,     9,
+      22,    23,    43,    24,    25,    26,     3,    27,    28,    86,
+      87,    27,    28,    17,    89,    52,    18,    53,    71,    71,
+      71,    71,    71,    71,    71,    71,    71,    71,    65,    72,
+      73,    68,    69,    70,    19,     5,    20,    64,    80,    81,
+       7,    22,    23,    15,    24,    25,    26,    42,    27,    28,
+      19,    45,    20,    48,    28,    50,    49,    22,    23,    62,
+      24,    25,    26,    51,    27,    28,    52,    63,    53,    66,
+      54,    55,    56,    57,    58,    59,    74,    75,    76,    77,
+      78,    79,    67,    83,    82,    84,    85,    88,    14,     0,
+      44
 };
 
 static const yytype_int8 yycheck[] =
 {
-      24,    54,    55,    56,    57,    58,    59,    17,     0,    13,
-      20,    15,    19,     4,    19,     6,    20,    21,    25,    23,
-      24,    25,    15,    27,    28,    13,    29,    30,    52,    53,
-      54,    55,    56,    57,    58,    59,    60,    61,    45,    27,
-      28,    48,    49,    50,    13,    28,    15,    16,    83,    84,
-      27,    20,    21,    88,    23,    24,    25,    13,    27,    28,
-      13,    28,    15,    16,     3,    13,     5,    20,    21,    26,
-      23,    24,    25,    17,    27,    28,     3,    20,     5,    14,
-       7,     8,     9,    10,    11,    12,    52,    53,    60,    61,
-      18,    20,    14,    14,    20,    20,    10,    -1,    18,    22,
-      -1,    20
+      24,    25,     4,    13,     6,    15,    16,    13,    29,    30,
+      20,    21,    19,    23,    24,    25,     0,    27,    28,    83,
+      84,    27,    28,    17,    88,     3,    20,     5,    52,    53,
+      54,    55,    56,    57,    58,    59,    60,    61,    45,    52,
+      53,    48,    49,    50,    13,    19,    15,    16,    60,    61,
+      15,    20,    21,    28,    23,    24,    25,    27,    27,    28,
+      13,    13,    15,    13,    28,    26,    17,    20,    21,    18,
+      23,    24,    25,    20,    27,    28,     3,    14,     5,    20,
+       7,     8,     9,    10,    11,    12,    54,    55,    56,    57,
+      58,    59,    20,    14,    20,    14,    18,    22,    10,    -1,
+      20
 };
 
   /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
@@ -777,7 +778,7 @@ static const yytype_int8 yystos[] =
       37,    38,    39,    35,    38,    28,    41,    17,    20,    13,
       15,    16,    20,    21,    23,    24,    25,    27,    28,    40,
       42,    43,    44,    45,    46,    47,    48,    49,    50,    51,
-      52,    53,    27,    49,    41,    13,    40,    49,    13,    17,
+      52,    53,    27,    49,    41,    13,    40,    40,    13,    17,
       26,    20,     3,     5,     7,     8,     9,    10,    11,    12,
        4,     6,    18,    14,    16,    49,    20,    20,    49,    49,
       49,    40,    52,    52,    51,    51,    51,    51,    51,    51,
@@ -1497,40 +1498,48 @@ yyreduce:
   switch (yyn)
     {
   case 2:
-#line 101 "X0.y"
+#line 102 "X0.y"
         {
 		gen(jmp, 0 ,0);
 	}
-#line 1505 "y.tab.c"
+#line 1506 "y.tab.c"
     break;
 
   case 3:
-#line 105 "X0.y"
+#line 106 "X0.y"
         {
 		pcode[(yyvsp[-2].number)].a = pcode_pointer;
 	}
-#line 1513 "y.tab.c"
+#line 1514 "y.tab.c"
     break;
 
   case 4:
-#line 110 "X0.y"
+#line 111 "X0.y"
         {
 		set_address(var_cnt);
 		gen(ini, 0 ,var_size+3);
 	}
-#line 1522 "y.tab.c"
+#line 1523 "y.tab.c"
+    break;
+
+  case 5:
+#line 116 "X0.y"
+        {
+		gen(opr, 0, 0);
+	}
+#line 1531 "y.tab.c"
     break;
 
   case 6:
-#line 119 "X0.y"
+#line 123 "X0.y"
         {
 		(yyval.number) = pcode_pointer;
 	}
-#line 1530 "y.tab.c"
+#line 1539 "y.tab.c"
     break;
 
   case 10:
-#line 139 "X0.y"
+#line 143 "X0.y"
         {
 		var_size++;
 		var_cnt++;
@@ -1539,11 +1548,11 @@ yyreduce:
 		if((yyvsp[-2].number) == 1) table[table_pointer].X0_type = X0_int;
 		else table[table_pointer].X0_type = X0_char;
 	}
-#line 1543 "y.tab.c"
+#line 1552 "y.tab.c"
     break;
 
   case 11:
-#line 148 "X0.y"
+#line 152 "X0.y"
         {
 		var_cnt++;
 		var_size += (yyvsp[-2].number);
@@ -1553,23 +1562,86 @@ yyreduce:
 		if((yyvsp[-5].number) == 1) table[table_pointer].X0_type = X0_int;
 		else table[table_pointer].X0_type = X0_char;
 	}
-#line 1557 "y.tab.c"
+#line 1566 "y.tab.c"
     break;
 
   case 12:
-#line 160 "X0.y"
+#line 164 "X0.y"
               {(yyval.number) = 1;}
-#line 1563 "y.tab.c"
+#line 1572 "y.tab.c"
     break;
 
   case 13:
-#line 161 "X0.y"
+#line 165 "X0.y"
            {(yyval.number) = 2;}
-#line 1569 "y.tab.c"
+#line 1578 "y.tab.c"
+    break;
+
+  case 14:
+#line 170 "X0.y"
+        {
+		(yyval.number) = position((yyvsp[0].ident));
+		is_array_element = false;
+	}
+#line 1587 "y.tab.c"
+    break;
+
+  case 15:
+#line 175 "X0.y"
+        {
+		(yyval.number) = position((yyvsp[-3].ident));
+		is_array_element = true;
+	}
+#line 1596 "y.tab.c"
+    break;
+
+  case 27:
+#line 206 "X0.y"
+        {
+		if(is_array_element) gen(lod, -1, table[(yyvsp[-1].number)].adr);
+		else gen(lod, lev - table[(yyvsp[-1].number)].level, table[(yyvsp[-1].number)].adr);
+		gen(opr, 0, 14);
+		gen(opr, 0, 15);
+	}
+#line 1607 "y.tab.c"
+    break;
+
+  case 28:
+#line 216 "X0.y"
+        {
+		gen(opr, 0, 16);
+		if(is_array_element) gen(sto, -1, table[(yyvsp[-1].number)].adr);
+		else gen(sto, lev - table[(yyvsp[-1].number)].level, table[(yyvsp[-1].number)].adr);
+	}
+#line 1617 "y.tab.c"
+    break;
+
+  case 45:
+#line 256 "X0.y"
+        {
+		gen(opr, 0 ,4);
+	}
+#line 1625 "y.tab.c"
+    break;
+
+  case 46:
+#line 260 "X0.y"
+        {
+		gen(opr, 0 ,5);
+	}
+#line 1633 "y.tab.c"
+    break;
+
+  case 49:
+#line 269 "X0.y"
+        {
+		gen(lit, 0, (yyvsp[0].number));
+	}
+#line 1641 "y.tab.c"
     break;
 
 
-#line 1573 "y.tab.c"
+#line 1645 "y.tab.c"
 
       default: break;
     }
@@ -1801,7 +1873,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 243 "X0.y"
+#line 274 "X0.y"
 
 
 void yyerror(const char *s){
@@ -1830,9 +1902,7 @@ int position(char* a)
 void table_add(enum object item)
 {
 	table_pointer++;
-	printf("id = %s\n",id);
 	strcpy(table[table_pointer].name, id);
-	printf("name = %s\n",table[table_pointer].name);
 	table[table_pointer].kind = item;
 	switch(item)
 	{
@@ -1929,7 +1999,156 @@ void display_table()
 
 void interpret()
 {
+	int p = 0; /* 指令指针 */
+	int b = 1; /* 指令基址 */
+	int t = 0; /* 栈顶指针 */
+	struct instruction i;
+	int s[stacksize];	
 
+	printf("Start X0\n");
+	fprintf(fout,"Start X0\n");
+	s[0] = 0; /* s[0]不用 */
+	s[1] = 0; /* 主程序的三个联系单元均置为0 */
+	s[2] = 0;
+	s[3] = 0;
+	do {
+	    i = pcode[p];	/* 读当前指令 */
+		p = p + 1;      
+		switch (i.f)
+		{
+			case lit:	/* 将常量a的值取到栈顶 */
+				t = t + 1;
+				s[t] = i.a;				
+				break;
+			case opr:	/* 数学、逻辑运算 */
+				switch (i.a)
+				{
+					case 0:  /* 函数调用结束后返回 */
+						t = b - 1;
+						p = s[t + 3];
+						b = s[t + 2];
+						break;
+					case 1: /* 栈顶元素取反 */
+						s[t] = - s[t];
+						break;
+					case 2: /* 次栈顶项加上栈顶项，退两个栈元素，相加值进栈 */
+						t = t - 1;
+						s[t] = s[t] + s[t + 1];
+						break;
+					case 3:/* 次栈顶项减去栈顶项 */
+						t = t - 1;
+						s[t] = s[t] - s[t + 1];
+						break;
+					case 4:/* 次栈顶项乘以栈顶项 */
+						t = t - 1;
+						s[t] = s[t] * s[t + 1];
+						break;
+					case 5:/* 次栈顶项除以栈顶项 */
+						t = t - 1;
+						s[t] = s[t] / s[t + 1];
+						break;
+					case 6:/* 栈顶元素的奇偶判断 */
+						s[t] = s[t] % 2;
+						break;
+					case 8:/* 次栈顶项与栈顶项是否相等 */
+						t = t - 1;
+						s[t] = (s[t] == s[t + 1]);
+						break;
+					case 9:/* 次栈顶项与栈顶项是否不等 */
+						t = t - 1;
+						s[t] = (s[t] != s[t + 1]);
+						break;
+					case 10:/* 次栈顶项是否小于栈顶项 */
+						t = t - 1;
+						s[t] = (s[t] < s[t + 1]);
+						break;
+					case 11:/* 次栈顶项是否大于等于栈顶项 */
+						t = t - 1;
+						s[t] = (s[t] >= s[t + 1]);
+						break;
+					case 12:/* 次栈顶项是否大于栈顶项 */
+						t = t - 1;
+						s[t] = (s[t] > s[t + 1]);
+						break;
+					case 13: /* 次栈顶项是否小于等于栈顶项 */
+						t = t - 1;
+						s[t] = (s[t] <= s[t + 1]);
+						break;
+					case 14:/* 栈顶值输出 */
+						printf("%d", s[t]);
+						fprintf(fout, "%d", s[t]);
+						t = t - 1;
+						break;
+					case 15:/* 输出换行符 */
+						printf("\n");
+						fprintf(fout,"\n");
+						break;
+					case 16:/* 读入一个输入置于栈顶 */
+						t = t + 1;
+						printf("?");
+						fprintf(fout, "?");
+						scanf("%d", &(s[t]));
+						fprintf(fout, "%d\n", s[t]);						
+						break;
+				}
+				break;
+			case lod:	/* 取相对当前过程的数据基地址为a的内存的值到栈顶 */
+				if(i.l >= 0)
+				{
+					t = t + 1;
+					s[t] = s[i.a+1];	
+				}
+				else
+				{
+					s[t] = s[i.a+s[t]+1];
+				}
+				break;
+			case sto:	/* 栈顶的值存到相对当前过程的数据基地址为a的内存 */
+				if(i.l >= 0)
+				{
+					s[1+i.a] = s[t];
+					t = t - 1;
+				}
+				else
+				{
+					s[i.a+s[t-1]+1] = s[t];
+					t = t - 2;
+				}
+				break;
+			case cal:	/* 调用子过程 */
+				s[t + 1] = base(i.l, s, b);	/* 将父过程基地址入栈，即建立静态链 */
+				s[t + 2] = b;	/* 将本过程基地址入栈，即建立动态链 */
+				s[t + 3] = p;	/* 将当前指令指针入栈，即保存返回地址 */
+				b = t + 1;	/* 改变基地址指针值为新过程的基地址 */
+				p = i.a;	/* 跳转 */
+				break;
+			case ini:	/* 在数据栈中为被调用的过程开辟a个单元的数据区 */
+				t = t + i.a;	
+				break;
+			case jmp:	/* 直接跳转 */
+				p = i.a;
+				break;
+			case jpc:	/* 条件跳转 */
+				if (s[t] == 0) 
+					p = i.a;
+				t = t - 1;
+				break;
+		}
+	} while (p != 0);
+	printf("End X0\n");
+	fprintf(fout,"End X0\n");
+}
+
+int base(int l, int* s, int b)
+{
+	int b1;
+	b1 = b;
+	while (l > 0)
+	{
+		b1 = s[b1];
+		l--;
+	}
+	return b1;
 }
 
 int main(){

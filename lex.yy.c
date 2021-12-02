@@ -351,8 +351,8 @@ static void yynoreturn yy_fatal_error ( const char* msg  );
 	(yy_hold_char) = *yy_cp; \
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
-#define YY_NUM_RULES 32
-#define YY_END_OF_BUFFER 33
+#define YY_NUM_RULES 31
+#define YY_END_OF_BUFFER 32
 /* This struct is not used in this scanner,
    but its presence is necessary. */
 struct yy_trans_info
@@ -362,7 +362,7 @@ struct yy_trans_info
 	};
 static const flex_int16_t yy_accept[60] =
     {   0,
-        0,    0,   33,   31,    2,    1,   31,   15,   16,   14,
+        0,    0,   32,   31,    2,    1,   31,   15,   16,   14,
        12,   13,   17,   29,   28,   26,   11,   25,   30,   18,
        19,   30,   30,   30,   30,   30,   30,   20,   21,   22,
        29,   24,   27,   23,   30,   30,   30,    6,   30,   30,
@@ -921,15 +921,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 55 "X0.l"
-{yyerror("Unknown character!");}
-	YY_BREAK
-case 32:
-YY_RULE_SETUP
-#line 57 "X0.l"
+#line 56 "X0.l"
 ECHO;
 	YY_BREAK
-#line 933 "lex.yy.c"
+#line 928 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1934,7 +1929,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 57 "X0.l"
+#line 56 "X0.l"
 
 void redirectInput(FILE *input){
     yyin = input;

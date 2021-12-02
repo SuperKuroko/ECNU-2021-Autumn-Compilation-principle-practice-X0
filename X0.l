@@ -52,7 +52,6 @@
     strcpy(yylval.ident,yytext);
     return IDENT;
 }
-.	{yyerror("Unknown character!");}
 
 %%
 void redirectInput(FILE *input){

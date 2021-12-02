@@ -1,6 +1,6 @@
 main{
-	int p;
-	p = 2;
-	write p;
+	int p[10];
+	read p[3];
+	write p[3];
 
 }
