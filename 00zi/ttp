@@ -1,6 +1,10 @@
-main{
-	int p[10];
-	read p[3];
-	write p[3];
+main
+{
+    int a;
+    int b[10];
+    int c;
 
+    a = (2==3);
+    write a;
+    write c;
 }

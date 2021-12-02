@@ -1,8 +1,12 @@
 main
 {
-    int a[10];
-    read a[2];
-    read a[3];
-    read a[4];
-    write a[a[a[2]]];
+    int a;
+    int b;
+    int c;
+    a = 2;
+    b = 100;
+    c = 1000;
+    a = b = 200;
+    write a;
+    write b;
 }

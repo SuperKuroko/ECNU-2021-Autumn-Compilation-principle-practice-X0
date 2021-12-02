@@ -24,7 +24,7 @@
 	int var_size;
 	int line;
 	bool is_array_element;
-
+	
     FILE* fin = NULL;     /* input file */
     FILE* ftable = NULL;  /* the file which store the table output */
     FILE* fpcode = NULL;  /* the file which store the pcode output */
@@ -202,10 +202,8 @@ while_stat
     ;
 
 write_stat
-	: WRITE var SEMI
+	: WRITE expression SEMI
 	{
-		if(is_array_element) gen(lod, -1, table[$2].adr);
-		else gen(lod, lev - table[$2].level, table[$2].adr);
 		gen(opr, 0, 14);
 		gen(opr, 0, 15);
 	}
@@ -231,6 +229,10 @@ expression_stat
 
 expression
 	: var BECOMES expression 
+	{
+		if(is_array_element) gen(sto, -2, table[$1].adr);
+		else gen(sto, lev - table[$1].level, table[$1].adr);
+	}
     | simple_expr
     ;
 
@@ -443,6 +445,7 @@ void interpret()
 		{
 			case lit:	/* 将常量a的值取到栈顶 */
 				t = t + 1;
+				printf("t = %d\n",t);
 				s[t] = i.a;				
 				break;
 			case opr:	/* 数学、逻辑运算 */
@@ -534,7 +537,7 @@ void interpret()
 					s[1+i.a] = s[t];
 					t = t - 1;
 				}
-				else
+				else 
 				{
 					s[i.a+s[t-1]+1] = s[t];
 					t = t - 2;
