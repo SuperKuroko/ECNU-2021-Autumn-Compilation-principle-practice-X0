@@ -17,6 +17,7 @@
     int lev;
     char id[var_name_length];
     int num;
+	int array_size;
 
     FILE* fin;    /* input file */
     FILE* ftable; /* the file which store the table output */
@@ -24,23 +25,30 @@
     FILE* fout;   /* output file */
     FILE* ferror; /* the file which store the error infomation (if had) */
 
-    enum object {
-        constant, 
+    enum object 
+	{
         variable,
+		array,
         procedure
     };
+
+	enum xtype
+	{
+		X0_int,
+		X0_char
+	};
 
     struct tablestruct
     {
         char name[var_name_length]; /* char array to store the var name*/
         enum object kind;           /* kind：const，var or procedure */
-        int val;                    /* val: only for const var */
         int level;                  /* level: for all except const var */ 
         int adr;                    /* adr: for all except const var */
         int size;                   /* size to alloc, only for procedure */
+		enum xtype X0_type;         /* only for var or const */
     };
-    struct tablestruct table[table_length]; 
 
+    struct tablestruct table[table_length]; 
     enum fct 
     {
         lit,     opr,     lod, 
@@ -58,8 +66,7 @@
     struct instruction pcode[pcode_length]; /* store pcode array */
 
 	void init();
-	void enter(enum object k);
-	void _enter(enum object k, int IsArray);
+	void table_add(enum object item);
 	void setdx(int n);
 	void gen(enum fct x, int y, int z);
     void display_table();
@@ -165,13 +172,6 @@ simple_expr
     | additive_expr EQL additive_expr
     ;
 
-
-declaration_list
-	: declaration_list declaration_stat 
-    | declaration_stat
-    |
-    ;
-
 additive_expr
 	: term 
     | additive_expr PLUS term 
@@ -215,6 +215,25 @@ int position(char* a)
     return i;
 }
 
+void table_add(enum object item)
+{
+	table_pointer++;
+	strcpy(table_pointer[table_pointer].name, id);
+	table[table_pointer].kind = item;
+	switch(item)
+	{
+		case variable:
+			table[table_pointer].level = lev;
+			table[table_pointer].size = -1;
+			break;
+		case array:
+			table[table_pointer].lev = lev;
+			break;
+		case procedure:
+			break;
+	}
+}
+
 void gen(enum fct x, int y, int z)
 {
 	if (pcode_pointer >= pcode_length)
@@ -252,41 +271,42 @@ void display_pcode()
 void display_table()
 {
 	int i;
-    /* 输出符号表 */
-	printf("tx : %d\n", tx);
-	for (i = 1; i <= tx; i++)
+	char map[][5] = {{"int"},{"char"}};
+    printf("num    kind      level  address  size\n");
+	for (i = 1; i <= table_pointer; i++)
+	{   
+		switch (table[i].kind)
 		{
-            printf("kind : %d\n", table[i].kind);         
-			switch (table[i].kind)
-			{
-				case constant:
-					printf("    %d const %s ", i, table[i].name);
-					printf("val=%d\n", table[i].val);
-					/* fprintf(ftable, "    %d const %s ", i, table[i].name);
-					fprintf(ftable, "val=%d\n", table[i].val); */
-					break;
-				case variable:
-					printf("    %d var   %s ", i, table[i].name);
-					printf("lev=%d addr=%d ", table[i].level, table[i].adr);
-                    if(table[i].t == xint) printf("type = int \n");
-                    else printf("type = char \n");
-					/* fprintf(ftable, "    %d var   %s ", i, table[i].name);
-					fprintf(ftable, "lev=%d addr=%d\n", table[i].level, table[i].adr);
-                    */
-					break;
-				case procedure:
-					printf("    %d proc  %s ", i, table[i].name);
-					printf("lev=%d addr=%d size=%d\n", table[i].level, table[i].adr, table[i].size);
-                    /*
-					fprintf(ftable,"    %d proc  %s ", i, table[i].name);
-					fprintf(ftable,"lev=%d addr=%d size=%d\n", table[i].level, table[i].adr, table[i].size);
-                    */
-					break;
-			}
+			case variable:
+				printf("%3d    var:%s   %2d      %3d    %3d\n",i,map[table[i].X0_type],table[i].level,table[i].adr,table[i].size);
+				fprintf(ftable, "%3d    var:%s   %2d      %3d    %3d\n",i,map[table[i].X0_type],table[i].level,table[i].adr,table[i].size);
+				break;
+
+			case array:
+				printf("%3d    ary:%s   %2d      %3d    %3d\n",i,map[table[i].X0_type],table[i].level,table[i].adr,table[i].size);
+				fprintf(ftable, "%3d    ary:%s   %2d      %3d    %3d\n",i,map[table[i].X0_type],table[i].level,table[i].adr,table[i].size);
+				break;
+
+			case procedure:
+				/*
+				printf("    %d proc  %s ", i, table[i].name);
+				printf("lev=%d addr=%d size=%d\n", table[i].level, table[i].adr, table[i].size);
+
+				fprintf(ftable,"    %d proc  %s ", i, table[i].name);
+				fprintf(ftable,"lev=%d addr=%d size=%d\n", table[i].level, table[i].adr, table[i].size);
+				*/
+				break;
 		}
-		printf("\n");
-		/* fprintf(ftable, "\n"); */
+	}
+	printf("\n");
+	fprintf(ftable, "\n");
 }
+
+void interpret()
+{
+
+}
+
 int main(){
     printf("Input file  ");
     scanf("%s", fname);
@@ -329,16 +349,16 @@ int main(){
 		printf("\n===Parsing success!===\n");
 		fprintf(ferror, "\n===Parsing success!===\n");
 
-		display_table();
-		fclose(ftable);
-
 		display_pcode();
 		fclose(fpcode);
+
+		display_table();
+		fclose(ftable);
 		
 		interpret();      	
 		fclose(fout);
 	}
-	
+
   	else
 	{
 		printf("%d errors in X0 program\n", err);

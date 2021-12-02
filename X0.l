@@ -41,9 +41,8 @@
 ";"  {return SEMI;}
 
 [0-9]+ {
-    printf("get a num %d\n", atoi(yytext));
-    yylval.num = atoi(yytext);
-    return NUM;
+    yylval.number = atoi(yytext);
+    return NUMBER;
 }
 
 [A-Za-z]([A-Za-z]|[0-9])* {
