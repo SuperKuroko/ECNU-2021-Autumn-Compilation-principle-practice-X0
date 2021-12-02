@@ -715,7 +715,7 @@ int main(void)
 		exit(1);
 	}	
 	if ((foutput = fopen("foutput.txt", "w")) == NULL)
-  {
+  	{
 		printf("Can't open the output file!\n");
 		exit(1);
 	}
@@ -735,7 +735,7 @@ int main(void)
 	
 	redirectInput(fin);		
 	init();
-  yyparse();
+  	yyparse();
 	if(err == 0)
 	{
 		printf("\n===Parsing success!===\n");
@@ -766,7 +766,7 @@ int main(void)
 	}
 	
 	fclose(ftable);
-  fclose(foutput);
+  	fclose(foutput);
 	fclose(fin);
 	return 0;
 }

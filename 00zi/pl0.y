@@ -942,6 +942,7 @@ void interpret()
 	printf("End pl0\n");
 	/*fprintf(fresult,"End pl0\n");*/
 }
+
 int base(int l, int* s, int b)
 {
     int bl;
