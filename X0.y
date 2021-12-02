@@ -265,7 +265,13 @@ simple_expr
 additive_expr
 	: term 
     | additive_expr PLUS term 
+	{
+		gen(opr, 0, 2);
+	}
     | additive_expr MINUS term 
+	{
+		gen(opr, 0, 1);
+	}
     ;
 
 term
@@ -283,6 +289,10 @@ term
 factor
 	: LP expression RP 
     | var 
+	{
+		if(is_array_element) gen(lod, -1, table[$1].adr);
+		else gen(lod, lev - table[$1].level, table[$1].adr);
+	}
     | NUMBER
 	{
 		gen(lit, 0, $1);

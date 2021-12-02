@@ -647,8 +647,8 @@ static const yytype_int16 yyrline[] =
        0,   102,   102,   106,   111,   101,   123,   136,   137,   138,
      142,   151,   164,   165,   169,   174,   182,   183,   187,   188,
      189,   190,   191,   192,   196,   197,   201,   205,   215,   224,
-     228,   229,   233,   234,   238,   239,   240,   241,   242,   243,
-     244,   248,   249,   250,   254,   255,   259,   266,   267,   268
+     228,   229,   233,   234,   238,   239,   243,   247,   251,   255,
+     259,   266,   267,   271,   278,   279,   283,   290,   291,   296
 };
 #endif
 
@@ -717,7 +717,7 @@ static const yytype_int8 yydefact[] =
       41,    44,     0,     0,     0,     0,     0,     0,     0,     0,
        0,    30,     0,     0,     0,     0,     0,     0,     0,     0,
        0,     0,     0,    47,    29,     0,    28,    27,     0,     0,
-      32,    48,    42,    43,    40,    36,    37,    39,    38,    35,
+      32,    48,    42,    43,    35,    38,    40,    37,    39,    36,
       46,    45,    11,     0,     0,    15,    24,    26,     0,    25
 };
 
@@ -1616,32 +1616,105 @@ yyreduce:
 #line 1617 "y.tab.c"
     break;
 
-  case 45:
-#line 256 "X0.y"
+  case 35:
+#line 240 "X0.y"
         {
-		gen(opr, 0 ,4);
+		gen(opr, 0, 8);
 	}
 #line 1625 "y.tab.c"
     break;
 
-  case 46:
-#line 260 "X0.y"
+  case 36:
+#line 244 "X0.y"
         {
-		gen(opr, 0 ,5);
+		gen(opr, 0, 9);
 	}
 #line 1633 "y.tab.c"
     break;
 
-  case 49:
-#line 269 "X0.y"
+  case 37:
+#line 248 "X0.y"
         {
-		gen(lit, 0, (yyvsp[0].number));
+		gen(opr, 0, 10);
 	}
 #line 1641 "y.tab.c"
     break;
 
+  case 38:
+#line 252 "X0.y"
+        {
+		gen(opr, 0, 11);
+	}
+#line 1649 "y.tab.c"
+    break;
 
-#line 1645 "y.tab.c"
+  case 39:
+#line 256 "X0.y"
+        {
+		gen(opr, 0, 12);
+	}
+#line 1657 "y.tab.c"
+    break;
+
+  case 40:
+#line 260 "X0.y"
+        {
+		gen(opr, 0, 13);
+	}
+#line 1665 "y.tab.c"
+    break;
+
+  case 42:
+#line 268 "X0.y"
+        {
+		gen(opr, 0, 2);
+	}
+#line 1673 "y.tab.c"
+    break;
+
+  case 43:
+#line 272 "X0.y"
+        {
+		gen(opr, 0, 1);
+	}
+#line 1681 "y.tab.c"
+    break;
+
+  case 45:
+#line 280 "X0.y"
+        {
+		gen(opr, 0 ,4);
+	}
+#line 1689 "y.tab.c"
+    break;
+
+  case 46:
+#line 284 "X0.y"
+        {
+		gen(opr, 0 ,5);
+	}
+#line 1697 "y.tab.c"
+    break;
+
+  case 48:
+#line 292 "X0.y"
+        {
+		if(is_array_element) gen(lod, -1, table[(yyvsp[0].number)].adr);
+		else gen(lod, lev - table[(yyvsp[0].number)].level, table[(yyvsp[0].number)].adr);
+	}
+#line 1706 "y.tab.c"
+    break;
+
+  case 49:
+#line 297 "X0.y"
+        {
+		gen(lit, 0, (yyvsp[0].number));
+	}
+#line 1714 "y.tab.c"
+    break;
+
+
+#line 1718 "y.tab.c"
 
       default: break;
     }
@@ -1873,7 +1946,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 274 "X0.y"
+#line 302 "X0.y"
 
 
 void yyerror(const char *s){

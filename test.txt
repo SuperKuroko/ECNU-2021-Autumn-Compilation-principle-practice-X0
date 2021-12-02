@@ -1,8 +1,8 @@
 main
 {
     int a[10];
+    read a[2];
+    read a[3];
     read a[4];
-    read a[9];
-    write a[9];
-    write a[4];
+    write a[a[a[2]]];
 }
