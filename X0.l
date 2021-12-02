@@ -4,6 +4,9 @@
     int line;
     void yyerror(char*);
     int yywrap(void);
+    void redirectInput(FILE *input);
+    void line_commet();
+    void block_commet();
 %}
 
 
@@ -18,7 +21,6 @@
 "write" {return WRITE;}
 "read"  {return READ;}
 "while" {return WHILE;}
-"for"   {return FOR;}
 
 "="  {return BECOMES;}
 "+"  {return PLUS;}
@@ -56,6 +58,7 @@
 void redirectInput(FILE *input){
     yyin = input;
 }
+
 int yygetchar(void){
     int ret;
     ret = getc(yyin);
@@ -89,27 +92,3 @@ int yywrap(void)
 }
 
 
-int scanch(void) {
-  int c;
-  c = input();
-  printf("c is %d\n", c);
-  if (c == '\\') {
-    switch (c = input()) {
-      case 'a':  return '\a';
-      case 'b':  return '\b';
-      case 'f':  return '\f';
-      case 'n':  return '\n';
-      case 'r':  return '\r';
-      case 't':  return '\t';
-      case 'v':  return '\v';
-      case '\\': return '\\';
-      case '"':  return '"' ;
-      case '\'': return '\'';
-      default:
-        printf("unknown escape sequence %s", c);
-        exit(1);
-    }
-  }
-  printf("c is %d\n", c);
-  return (c);                   // Just an ordinary old character!
-}

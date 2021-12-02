@@ -15,15 +15,19 @@
 	int table_pointer;
     int pcode_pointer;
     int lev;
+	char fname[20];
     char id[var_name_length];
     int num;
 	int array_size;
+	int err;
+	int var_cnt;
+	int line;
 
-    FILE* fin;    /* input file */
-    FILE* ftable; /* the file which store the table output */
-    FILE* fpcode;  /* the file which store the pcode output */
-    FILE* fout;   /* output file */
-    FILE* ferror; /* the file which store the error infomation (if had) */
+    FILE* fin = NULL;     /* input file */
+    FILE* ftable = NULL;  /* the file which store the table output */
+    FILE* fpcode = NULL;  /* the file which store the pcode output */
+    FILE* fout = NULL;    /* output file */
+    FILE* fmistake = NULL;  /* the file which store the error infomation (if had) */
 
     enum object 
 	{
@@ -86,18 +90,24 @@
 %token <number> NUMBER
 %token <ident> IDENT CHAR INT 
 
-%type <number> get_table_addr get_pcode_addr declaration_list VarInit Vardecl Vardef 
-%type <number> block var_p var_t prevardecl prevardef pass_factor
-%type statement VarInit Vardef condition defunc
+%type <number> get_code_addr 
 
 %%
 
 main_function
 	: MAIN
 	{
-		
+		gen(jmp, 0, 0);
+		codep
 	}
 	  LB declaration_list statement_list RB
+	;
+
+get_code_addr
+	:
+	{
+		$$ = pcode_pointer;
+	}
 	;
 
 declaration_list
@@ -197,17 +207,17 @@ factor
 
 %%
 
-yyerror(const char *s){
+void yyerror(const char *s){
     printf("error!:%s\n, located at %d line\n", s, line);
 }
 
 void init()
 {
 	table_pointer = 0;
-	pcode_pointer = 0l
+	pcode_pointer = 0;
 	lev = 0;
 	err = 0;
-	total_var = 0;
+	var_cnt = 0;
 }
 
 int position(char* a)
@@ -222,7 +232,7 @@ int position(char* a)
 void table_add(enum object item)
 {
 	table_pointer++;
-	strcpy(table_pointer[table_pointer].name, id);
+	strcpy(table[table_pointer].name, id);
 	table[table_pointer].kind = item;
 	switch(item)
 	{
@@ -231,7 +241,7 @@ void table_add(enum object item)
 			table[table_pointer].size = -1;
 			break;
 		case array:
-			table[table_pointer].lev = lev;
+			table[table_pointer].level = lev;
 			break;
 		case procedure:
 			break;
@@ -241,7 +251,7 @@ void table_add(enum object item)
 void set_address(int n)
 {
 	int i,idx;
-	int tar = 3+total_var;
+	int tar = 3+var_cnt;
 	for(i = 1;i <= n;i++)
 	{
 		idx = table_pointer - i + 1;
@@ -280,8 +290,8 @@ void display_pcode()
 	
     for (i = 0; i < pcode_pointer; i++)
     {
-        printf("%d %s %d %d\n", i, name[code[i].f], code[i].l, code[i].a);
-        fprintf(fpcode,"%d %s %d %d\n", i, name[code[i].f], code[i].l, code[i].a);
+        printf("%d %s %d %d\n", i, name[pcode[i].f], pcode[i].l, pcode[i].a);
+        fprintf(fpcode,"%d %s %d %d\n", i, name[pcode[i].f], pcode[i].l, pcode[i].a);
     }
 }
 
@@ -333,9 +343,9 @@ int main(){
         exit(1);
     }
 
-	if ((ferror = fopen("error.txt", "w")) == NULL)
+	if ((fmistake= fopen("error.txt", "w")) == NULL)
   	{
-		printf("Can't open the output file!\n");
+		printf("Can't open the error.txt file!\n");
 		exit(1);
 	}
 
@@ -364,7 +374,7 @@ int main(){
 	if(err == 0)
 	{
 		printf("\n===Parsing success!===\n");
-		fprintf(ferror, "\n===Parsing success!===\n");
+		fprintf(fmistake, "\n===Parsing success!===\n");
 
 		display_pcode();
 		fclose(fpcode);
@@ -379,7 +389,7 @@ int main(){
   	else
 	{
 		printf("%d errors in X0 program\n", err);
-		fprintf(ferror, "%d errors in X0 program\n", err);
+		fprintf(fmistake, "%d errors in X0 program\n", err);
 	}
 
 	fclose(fin);

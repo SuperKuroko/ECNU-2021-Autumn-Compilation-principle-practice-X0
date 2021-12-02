@@ -49,17 +49,79 @@ extern int yydebug;
 # define YYTOKENTYPE
   enum yytokentype
   {
-    INTEGER = 258,
-    VARIABLE = 259
+    PLUS = 258,
+    DIV = 259,
+    MINUS = 260,
+    MUL = 261,
+    EQL = 262,
+    GEQ = 263,
+    LEQ = 264,
+    LSS = 265,
+    GTR = 266,
+    NEQ = 267,
+    LP = 268,
+    RP = 269,
+    LB = 270,
+    RB = 271,
+    LSB = 272,
+    RSB = 273,
+    MAIN = 274,
+    SEMI = 275,
+    IF = 276,
+    ELSE = 277,
+    READ = 278,
+    WRITE = 279,
+    WHILE = 280,
+    BECOMES = 281,
+    NUMBER = 282,
+    IDENT = 283,
+    CHAR = 284,
+    INT = 285
   };
 #endif
 /* Tokens.  */
-#define INTEGER 258
-#define VARIABLE 259
+#define PLUS 258
+#define DIV 259
+#define MINUS 260
+#define MUL 261
+#define EQL 262
+#define GEQ 263
+#define LEQ 264
+#define LSS 265
+#define GTR 266
+#define NEQ 267
+#define LP 268
+#define RP 269
+#define LB 270
+#define RB 271
+#define LSB 272
+#define RSB 273
+#define MAIN 274
+#define SEMI 275
+#define IF 276
+#define ELSE 277
+#define READ 278
+#define WRITE 279
+#define WHILE 280
+#define BECOMES 281
+#define NUMBER 282
+#define IDENT 283
+#define CHAR 284
+#define INT 285
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef int YYSTYPE;
+union YYSTYPE
+{
+#line 82 "X0.y"
+
+    int number;
+    char* ident;
+
+#line 122 "y.tab.h"
+
+};
+typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
 #endif

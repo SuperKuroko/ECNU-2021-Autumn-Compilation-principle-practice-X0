@@ -124,7 +124,7 @@ procstart:
         /* Main procedure */
         strcpy(id, "main");
         _enter(procedure, 0);
-        table[tx].a+..+dr = cx;
+        table[tx].adr = cx;
         table[tx].t = xvoid;
         code[$1].a = cx;
         proctable[px] = tx;
