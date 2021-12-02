@@ -64,7 +64,7 @@
 }
 
 %token PLUS DIV MINUS MUL EQL GEQ LEQ LSS GTR NEQ
-%token LP RP LB RB LSB RSB MAIN SEMI CONST IF ELSE READ WRITE FOR WHILE RETURN
+%token LP RP LB RB LSB RSB MAIN SEMI IF ELSE READ WRITE WHILE BECOMES
 
 %token <number> NUMBER
 %token <ident> IDENT CHAR INT 
@@ -77,34 +77,34 @@
 
 main_function: MAIN LB declaration_list statement_list RB;
 
-declaration_list: 
-      declaration_list declaration_stat 
+declaration_list
+	: declaration_list declaration_stat 
     | declaration_stat
     |
     ;
 
-declaration_stat: 
-      type IDENT SEMI 
-    | type IDENT LSB NUM RSB SEMI
+declaration_stat
+	: type IDENT SEMI 
+    | type IDENT LSB NUMBER RSB SEMI
     ;
 
-type: 
-      INT
+type
+	: INT
     | CHAR
     ;
 
-var:
-      IDENT 
+var	
+	: IDENT 
     | IDENT LSB expression RSB
     ;
 
-statement_list:
-      statement_list statement
+statement_list
+	: statement_list statement
     |
     ;
 
-statement: 
-      if_stat 
+statement
+	: if_stat 
     | while_stat 
     | read_stat 
     | write_stat 
@@ -112,39 +112,39 @@ statement:
     | expression_stat
     ;
 
-if_stat:
-      IF LP expression RP statement 
+if_stat
+	: IF LP expression RP statement 
     | IF LP expression RP statement ELSE statement
     ;
 
-while_stat:
-      WHILE LP expression RP statement
+while_stat
+	: WHILE LP expression RP statement
     ;
 
-write_stat:
-      WRITE expression SEMI
+write_stat
+	: WRITE expression SEMI
     ;
 
-read_stat:
-      READ var SEMI
+read_stat
+	: READ var SEMI
     ;
 
-compound_stat:
-      LB statement_list RB
+compound_stat
+	: LB statement_list RB
     ;
 
-expression_stat:
-      expression SEMI 
+expression_stat
+	: expression SEMI 
     | SEMI
     ;
 
-expression:
-      var BECOMES expression 
+expression
+	: var BECOMES expression 
     | simple_expr
     ;
 
-simple_expr:
-      additive_expr 
+simple_expr
+	: additive_expr 
     | additive_expr NEQ additive_expr
     | additive_expr GEQ additive_expr
     | additive_expr LEQ additive_expr
@@ -154,27 +154,27 @@ simple_expr:
     ;
 
 
-declaration_list: 
-      declaration_list declaration_stat 
+declaration_list
+	: declaration_list declaration_stat 
     | declaration_stat
     |
     ;
 
-additive_expr:
-      term 
+additive_expr
+	: term 
     | additive_expr PLUS term 
     | additive_expr MINUS term 
     ;
 
 
-term:
-      factor
+term
+	: factor
     | term MUL factor
     | term DIV factor
     ;
 
-factor:
-      LP expression RP 
+factor
+	: LP expression RP 
     | var 
     | NUMBER
     ;
@@ -195,14 +195,14 @@ int main(){
     }
     /* if ((foutput = fopen("foutput.txt", "w")) == NULL)
     {
-		printf("Can't open the output file!\n");
-		exit(1);
-	}
-	if ((ftable = fopen("ftable.txt", "w")) == NULL)
-	{
-		printf("Can't open ftable.txt file!\n");
-		exit(1);
-	}
+    printf("Can't open the output file!\n");
+    exit(1);
+  }
+  if ((ftable = fopen("ftable.txt", "w")) == NULL)
+  {
+    printf("Can't open ftable.txt file!\n");
+    exit(1);
+  }
     */
     redirectInput(fin);
     init();
