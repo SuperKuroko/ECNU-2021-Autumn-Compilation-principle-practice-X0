@@ -67,7 +67,7 @@
 
 	void init();
 	void table_add(enum object item);
-	void setdx(int n);
+	void set_address(int n);
 	void gen(enum fct x, int y, int z);
     void display_table();
     void display_pcode();
@@ -93,7 +93,11 @@
 %%
 
 main_function
-	: MAIN LB declaration_list statement_list RB
+	: MAIN
+	{
+		
+	}
+	  LB declaration_list statement_list RB
 	;
 
 declaration_list
@@ -234,6 +238,19 @@ void table_add(enum object item)
 	}
 }
 
+void set_address(int n)
+{
+	int i,idx;
+	int tar = 3+total_var;
+	for(i = 1;i <= n;i++)
+	{
+		idx = table_pointer - i + 1;
+		if(table[idx].kind == array)
+			tar -= table[idx].size;
+		else tar--;
+		table[idx].adr = tar;
+	}
+}
 void gen(enum fct x, int y, int z)
 {
 	if (pcode_pointer >= pcode_length)

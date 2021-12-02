@@ -71,15 +71,15 @@
     /* 符号表结构 */
     struct tablestruct
     {
-    char name[al];      /* 名字 */
-    enum object kind;   /* 类型：const，var或procedure */
-    int val;            /* 数值，仅const使用 */
+        char name[al];      /* 名字 */
+        enum object kind;   /* 类型：const，var或procedure */
+        int val;            /* 数值，仅const使用 */
         int level;          /* 所处层，仅const不使用 */ 
         int adr;            /* 地址，仅const不使用 */
         int size;           /* 需要分配的数据区空间, 仅procedure使用 */
-    enum type t; /* type */
-    int is_arry;
-    int parameter_cnt;
+        enum type t; /* type */
+        int is_arry;
+        int parameter_cnt;
     };
     struct tablestruct table[txmax]; /* 符号表 */
 
