@@ -21,6 +21,7 @@
 	int array_size;
 	int err;
 	int var_cnt;
+	int var_size;
 	int line;
 
     FILE* fin = NULL;     /* input file */
@@ -90,23 +91,40 @@
 %token <number> NUMBER
 %token <ident> IDENT CHAR INT 
 
-%type <number> get_code_addr 
+%type <number> get_pcode_addr get_table_addr type
 
 %%
 
 main_function
-	: MAIN
+	:
+	get_pcode_addr
 	{
-		gen(jmp, 0, 0);
-		codep
+		gen(jmp, 0 ,0);
+	} 
+	MAIN
+	{
+		pcode[$1].a = pcode_pointer;
 	}
-	  LB declaration_list statement_list RB
+	LB 
+	declaration_list
+	{
+		set_address(var_cnt);
+		gen(ini, 0 ,var_size+3);
+	}
+	statement_list RB
 	;
 
-get_code_addr
+get_pcode_addr
 	:
 	{
 		$$ = pcode_pointer;
+	}
+	;
+
+get_table_addr
+	:
+	{
+		$$ = table_pointer;
 	}
 	;
 
@@ -118,12 +136,29 @@ declaration_list
 
 declaration_stat
 	: type IDENT SEMI 
+	{
+		var_size++;
+		var_cnt++;
+		strcpy(id, $2);
+		table_add(variable);
+		if($1 == 1) table[table_pointer].X0_type = X0_int;
+		else table[table_pointer].X0_type = X0_char;
+	}
     | type IDENT LSB NUMBER RSB SEMI
+	{
+		var_cnt++;
+		var_size += $4;
+		strcpy(id, $2);
+		table_add(array);
+		table[table_pointer].size = $4;
+		if($1 == 1) table[table_pointer].X0_type = X0_int;
+		else table[table_pointer].X0_type = X0_char;
+	}
     ;
 
 type
-	: INT
-    | CHAR
+	: INT {$$ = 1;}
+    | CHAR {$$ = 2;}
     ;
 
 var	
@@ -218,6 +253,7 @@ void init()
 	lev = 0;
 	err = 0;
 	var_cnt = 0;
+	var_size = 0;
 }
 
 int position(char* a)
@@ -232,13 +268,15 @@ int position(char* a)
 void table_add(enum object item)
 {
 	table_pointer++;
+	printf("id = %s\n",id);
 	strcpy(table[table_pointer].name, id);
+	printf("name = %s\n",table[table_pointer].name);
 	table[table_pointer].kind = item;
 	switch(item)
 	{
 		case variable:
 			table[table_pointer].level = lev;
-			table[table_pointer].size = -1;
+			table[table_pointer].size = 1;
 			break;
 		case array:
 			table[table_pointer].level = lev;
@@ -251,16 +289,15 @@ void table_add(enum object item)
 void set_address(int n)
 {
 	int i,idx;
-	int tar = 3+var_cnt;
+	int tar = 3+var_size;
 	for(i = 1;i <= n;i++)
 	{
 		idx = table_pointer - i + 1;
-		if(table[idx].kind == array)
-			tar -= table[idx].size;
-		else tar--;
+		tar -= table[idx].size;
 		table[idx].adr = tar;
 	}
 }
+
 void gen(enum fct x, int y, int z)
 {
 	if (pcode_pointer >= pcode_length)
@@ -278,7 +315,6 @@ void gen(enum fct x, int y, int z)
 	pcode[pcode_pointer].a = z;
 	pcode_pointer++;
 }
-
 
 void display_pcode()
 {
@@ -298,20 +334,20 @@ void display_pcode()
 void display_table()
 {
 	int i;
-	char map[][5] = {{"int"},{"char"}};
-    printf("num    kind      level  address  size\n");
+	char map[][5] = {{"int "},{"char"}};
+    printf("num    name    kind      level  address  size\n");
 	for (i = 1; i <= table_pointer; i++)
 	{   
 		switch (table[i].kind)
 		{
 			case variable:
-				printf("%3d    var:%s   %2d      %3d    %3d\n",i,map[table[i].X0_type],table[i].level,table[i].adr,table[i].size);
-				fprintf(ftable, "%3d    var:%s   %2d      %3d    %3d\n",i,map[table[i].X0_type],table[i].level,table[i].adr,table[i].size);
+				printf("%3d     %s     var:%s    %2d      %3d    %3d\n",i,table[i].name,map[table[i].X0_type],table[i].level,table[i].adr,table[i].size);
+				fprintf(ftable, "%3d     %s     var:%s    %2d      %3d    %3d\n",i,table[i].name,map[table[i].X0_type],table[i].level,table[i].adr,table[i].size);
 				break;
 
 			case array:
-				printf("%3d    ary:%s   %2d      %3d    %3d\n",i,map[table[i].X0_type],table[i].level,table[i].adr,table[i].size);
-				fprintf(ftable, "%3d    ary:%s   %2d      %3d    %3d\n",i,map[table[i].X0_type],table[i].level,table[i].adr,table[i].size);
+				printf("%3d     %s     ary:%s    %2d      %3d    %3d\n",i,table[i].name,map[table[i].X0_type],table[i].level,table[i].adr,table[i].size);
+				fprintf(ftable, "%3d     %s     ary:%s    %2d      %3d    %3d\n",i,table[i].name,map[table[i].X0_type],table[i].level,table[i].adr,table[i].size);
 				break;
 
 			case procedure:
@@ -336,7 +372,8 @@ void interpret()
 
 int main(){
     printf("Input file  ");
-    scanf("%s", fname);
+	strcpy(fname,"test.txt");
+    //scanf("%s", fname);
     if((fin = fopen(fname, "r")) == NULL)
     {
         printf("open file error!\n");

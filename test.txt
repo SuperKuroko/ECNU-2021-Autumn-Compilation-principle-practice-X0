@@ -1,3 +1,7 @@
 main
 {
+    int a;
+    char b;
+    int c[10];
+    char d[10];
 }

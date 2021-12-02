@@ -113,7 +113,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 82 "X0.y"
+#line 83 "X0.y"
 
     int number;
     char* ident;
