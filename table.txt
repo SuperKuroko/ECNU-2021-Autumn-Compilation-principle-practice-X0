@@ -1,4 +1,3 @@
   1     a     var:int      0        3      1
-  2     b     var:int      0        4      1
-  3     c     var:int      0        5      1
+  2     b     var:char     0        4      1
 

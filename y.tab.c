@@ -94,6 +94,7 @@
 	int line;
 	bool is_write;
 	bool is_array_element;
+	bool is_char;
 	
     FILE* fin = NULL;     /* input file */
     FILE* ftable = NULL;  /* the file which store the table output */
@@ -150,7 +151,7 @@
     void interpret();
     int base(int l, int* s, int b);
 
-#line 154 "y.tab.c"
+#line 155 "y.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -262,12 +263,12 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 85 "X0.y"
+#line 86 "X0.y"
 
     int number;
     char* ident;
 
-#line 271 "y.tab.c"
+#line 272 "y.tab.c"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -645,12 +646,12 @@ static const yytype_int8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,   103,   103,   107,   112,   102,   124,   137,   138,   139,
-     143,   152,   165,   166,   170,   175,   185,   186,   190,   191,
-     192,   193,   194,   195,   196,   200,   201,   205,   210,   209,
-     217,   226,   230,   243,   248,   252,   253,   257,   261,   265,
-     269,   273,   280,   281,   285,   292,   293,   297,   304,   305,
-     310
+       0,   104,   104,   108,   113,   103,   125,   138,   139,   140,
+     144,   153,   166,   167,   171,   178,   190,   191,   195,   196,
+     197,   198,   199,   200,   201,   205,   206,   210,   215,   214,
+     222,   232,   236,   250,   255,   259,   260,   264,   268,   272,
+     276,   280,   287,   288,   292,   299,   300,   304,   311,   312,
+     317
 };
 #endif
 
@@ -1500,48 +1501,48 @@ yyreduce:
   switch (yyn)
     {
   case 2:
-#line 103 "X0.y"
+#line 104 "X0.y"
         {
 		gen(jmp, 0 ,0);
 	}
-#line 1508 "y.tab.c"
+#line 1509 "y.tab.c"
     break;
 
   case 3:
-#line 107 "X0.y"
+#line 108 "X0.y"
         {
 		pcode[(yyvsp[-2].number)].a = pcode_pointer;
 	}
-#line 1516 "y.tab.c"
+#line 1517 "y.tab.c"
     break;
 
   case 4:
-#line 112 "X0.y"
+#line 113 "X0.y"
         {
 		set_address(var_cnt);
 		gen(ini, 0 ,var_size+3);
 	}
-#line 1525 "y.tab.c"
+#line 1526 "y.tab.c"
     break;
 
   case 5:
-#line 117 "X0.y"
+#line 118 "X0.y"
         {
 		gen(opr, 0, 0);
 	}
-#line 1533 "y.tab.c"
+#line 1534 "y.tab.c"
     break;
 
   case 6:
-#line 124 "X0.y"
+#line 125 "X0.y"
         {
 		(yyval.number) = pcode_pointer;
 	}
-#line 1541 "y.tab.c"
+#line 1542 "y.tab.c"
     break;
 
   case 10:
-#line 144 "X0.y"
+#line 145 "X0.y"
         {
 		var_size++;
 		var_cnt++;
@@ -1550,11 +1551,11 @@ yyreduce:
 		if((yyvsp[-2].number) == 1) table[table_pointer].X0_type = X0_int;
 		else table[table_pointer].X0_type = X0_char;
 	}
-#line 1554 "y.tab.c"
+#line 1555 "y.tab.c"
     break;
 
   case 11:
-#line 153 "X0.y"
+#line 154 "X0.y"
         {
 		var_cnt++;
 		var_size += (yyvsp[-2].number);
@@ -1564,181 +1565,187 @@ yyreduce:
 		if((yyvsp[-5].number) == 1) table[table_pointer].X0_type = X0_int;
 		else table[table_pointer].X0_type = X0_char;
 	}
-#line 1568 "y.tab.c"
+#line 1569 "y.tab.c"
     break;
 
   case 12:
-#line 165 "X0.y"
+#line 166 "X0.y"
               {(yyval.number) = 1;}
-#line 1574 "y.tab.c"
+#line 1575 "y.tab.c"
     break;
 
   case 13:
-#line 166 "X0.y"
+#line 167 "X0.y"
            {(yyval.number) = 2;}
-#line 1580 "y.tab.c"
+#line 1581 "y.tab.c"
     break;
 
   case 14:
-#line 171 "X0.y"
+#line 172 "X0.y"
         {
 		(yyval.number) = position((yyvsp[0].ident));
+		if(table[(yyval.number)].X0_type == X0_char) is_char = true;
+		else is_char = false;
 		is_array_element = false;
 	}
-#line 1589 "y.tab.c"
+#line 1592 "y.tab.c"
     break;
 
   case 15:
-#line 176 "X0.y"
+#line 179 "X0.y"
         {
 		(yyval.number) = position((yyvsp[-3].ident));
+		if(table[(yyval.number)].X0_type == X0_char) is_char = true;
+		else is_char = false;
 		is_array_element = true;
 		gen(lit, 0, table[(yyval.number)].adr);
 		gen(opr, 0, 2);
 	}
-#line 1600 "y.tab.c"
+#line 1605 "y.tab.c"
     break;
 
   case 28:
-#line 210 "X0.y"
+#line 215 "X0.y"
         {
 		is_write = true;
 	}
-#line 1608 "y.tab.c"
+#line 1613 "y.tab.c"
     break;
 
   case 30:
-#line 218 "X0.y"
+#line 223 "X0.y"
         {
-		gen(opr, 0, 16);
+		if(is_char) gen(opr, 0, 20);
+		else gen(opr, 0, 16);
 		if(is_array_element) gen(opr, 0, 17);
 		else gen(sto, lev - table[(yyvsp[-1].number)].level, table[(yyvsp[-1].number)].adr);
 	}
-#line 1618 "y.tab.c"
+#line 1624 "y.tab.c"
     break;
 
   case 32:
-#line 231 "X0.y"
+#line 237 "X0.y"
         {
 		if(is_write)
 		{
-			gen(opr, 0, 14);
+			if(is_char) gen(opr, 0 ,19);
+			else gen(opr, 0, 14);
 			gen(opr, 0, 15);
 			is_write = false;
 		}
 		gen(pop, 0, 1);
 	}
-#line 1632 "y.tab.c"
+#line 1639 "y.tab.c"
     break;
 
   case 33:
-#line 244 "X0.y"
+#line 251 "X0.y"
         {
 		if(is_array_element) gen(opr, 0, 17);
 		else gen(sto, lev - table[(yyvsp[-2].number)].level, table[(yyvsp[-2].number)].adr);
 	}
-#line 1641 "y.tab.c"
+#line 1648 "y.tab.c"
     break;
 
   case 36:
-#line 254 "X0.y"
+#line 261 "X0.y"
         {
 		gen(opr, 0, 8);
 	}
-#line 1649 "y.tab.c"
+#line 1656 "y.tab.c"
     break;
 
   case 37:
-#line 258 "X0.y"
+#line 265 "X0.y"
         {
 		gen(opr, 0, 9);
 	}
-#line 1657 "y.tab.c"
+#line 1664 "y.tab.c"
     break;
 
   case 38:
-#line 262 "X0.y"
+#line 269 "X0.y"
         {
 		gen(opr, 0, 10);
 	}
-#line 1665 "y.tab.c"
+#line 1672 "y.tab.c"
     break;
 
   case 39:
-#line 266 "X0.y"
+#line 273 "X0.y"
         {
 		gen(opr, 0, 11);
 	}
-#line 1673 "y.tab.c"
+#line 1680 "y.tab.c"
     break;
 
   case 40:
-#line 270 "X0.y"
+#line 277 "X0.y"
         {
 		gen(opr, 0, 12);
 	}
-#line 1681 "y.tab.c"
+#line 1688 "y.tab.c"
     break;
 
   case 41:
-#line 274 "X0.y"
+#line 281 "X0.y"
         {
 		gen(opr, 0, 13);
 	}
-#line 1689 "y.tab.c"
+#line 1696 "y.tab.c"
     break;
 
   case 43:
-#line 282 "X0.y"
+#line 289 "X0.y"
         {
 		gen(opr, 0, 2);
 	}
-#line 1697 "y.tab.c"
+#line 1704 "y.tab.c"
     break;
 
   case 44:
-#line 286 "X0.y"
+#line 293 "X0.y"
         {
 		gen(opr, 0, 1);
 	}
-#line 1705 "y.tab.c"
+#line 1712 "y.tab.c"
     break;
 
   case 46:
-#line 294 "X0.y"
+#line 301 "X0.y"
         {
 		gen(opr, 0 ,4);
 	}
-#line 1713 "y.tab.c"
+#line 1720 "y.tab.c"
     break;
 
   case 47:
-#line 298 "X0.y"
+#line 305 "X0.y"
         {
 		gen(opr, 0 ,5);
 	}
-#line 1721 "y.tab.c"
+#line 1728 "y.tab.c"
     break;
 
   case 49:
-#line 306 "X0.y"
+#line 313 "X0.y"
         {
 		if(is_array_element) gen(opr, 0 ,18);
 		else gen(lod, lev - table[(yyvsp[0].number)].level, table[(yyvsp[0].number)].adr);
 	}
-#line 1730 "y.tab.c"
+#line 1737 "y.tab.c"
     break;
 
   case 50:
-#line 311 "X0.y"
+#line 318 "X0.y"
         {
 		gen(lit, 0, (yyvsp[0].number));
 	}
-#line 1738 "y.tab.c"
+#line 1745 "y.tab.c"
     break;
 
 
-#line 1742 "y.tab.c"
+#line 1749 "y.tab.c"
 
       default: break;
     }
@@ -1970,7 +1977,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 316 "X0.y"
+#line 323 "X0.y"
 
 
 void yyerror(const char *s){
@@ -1987,6 +1994,7 @@ void init()
 	var_size = 0;
 	is_write = false;
 	is_array_element = false;
+	is_char = false;
 }
 
 int position(char* a)
@@ -2197,6 +2205,17 @@ void interpret()
 						s[s[t]+1] = s[t+1];
 					case 18:
 						s[t] = s[s[t]+1];
+					case 19:
+						printf("%c", s[t]);
+						fprintf(fout, "%c", s[t]);
+						break;
+					case 20:
+						t = t + 1;
+						printf("?");
+						fprintf(fout, "?");
+						scanf("%c", &(s[t]));
+						fprintf(fout, "%c\n", s[t]);						
+						break;
 				}
 				break;
 			case lod:	/* 取相对当前过程的数据基地址为a的内存的值到栈顶 */

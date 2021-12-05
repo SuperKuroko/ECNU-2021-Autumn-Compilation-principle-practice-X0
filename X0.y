@@ -25,6 +25,7 @@
 	int line;
 	bool is_write;
 	bool is_array_element;
+	bool is_char;
 	
     FILE* fin = NULL;     /* input file */
     FILE* ftable = NULL;  /* the file which store the table output */
@@ -170,11 +171,15 @@ var
 	: IDENT 
 	{
 		$$ = position($1);
+		if(table[$$].X0_type == X0_char) is_char = true;
+		else is_char = false;
 		is_array_element = false;
 	}
     | IDENT LSB expression RSB
 	{
 		$$ = position($1);
+		if(table[$$].X0_type == X0_char) is_char = true;
+		else is_char = false;
 		is_array_element = true;
 		gen(lit, 0, table[$$].adr);
 		gen(opr, 0, 2);
@@ -216,7 +221,8 @@ write_stat
 read_stat
 	: READ var SEMI
 	{
-		gen(opr, 0, 16);
+		if(is_char) gen(opr, 0, 20);
+		else gen(opr, 0, 16);
 		if(is_array_element) gen(opr, 0, 17);
 		else gen(sto, lev - table[$2].level, table[$2].adr);
 	}
@@ -231,7 +237,8 @@ expression_stat
 	{
 		if(is_write)
 		{
-			gen(opr, 0, 14);
+			if(is_char) gen(opr, 0 ,19);
+			else gen(opr, 0, 14);
 			gen(opr, 0, 15);
 			is_write = false;
 		}
@@ -329,6 +336,7 @@ void init()
 	var_size = 0;
 	is_write = false;
 	is_array_element = false;
+	is_char = false;
 }
 
 int position(char* a)
@@ -539,6 +547,17 @@ void interpret()
 						s[s[t]+1] = s[t+1];
 					case 18:
 						s[t] = s[s[t]+1];
+					case 19:
+						printf("%c", s[t]);
+						fprintf(fout, "%c", s[t]);
+						break;
+					case 20:
+						t = t + 1;
+						printf("?");
+						fprintf(fout, "?");
+						scanf("%c", &(s[t]));
+						fprintf(fout, "%c\n", s[t]);						
+						break;
 				}
 				break;
 			case lod:	/* 取相对当前过程的数据基地址为a的内存的值到栈顶 */
