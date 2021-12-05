@@ -42,6 +42,9 @@
 "==" {return EQL;}
 ";"  {return SEMI;}
 
+"//" {line_commet();}
+"/*" {block_commet();}
+
 [0-9]+ {
     yylval.number = atoi(yytext);
     return NUMBER;
@@ -58,26 +61,29 @@ void redirectInput(FILE *input){
     yyin = input;
 }
 
-int yygetchar(void){
+int yygetchar(void)
+{
     int ret;
     ret = getc(yyin);
     printf("%c", ret);
     return ret;
 }
 
-void line_commet(){
+void line_commet()
+{
     char c;
-    while(c = input() != '\n'){
-    }
+    while(c = input() != '\n'){}
     ++line;
 }
 
 void block_commet() {
     char c;
-    while (1) {
+    while (1) 
+    {
         while ((c = input()) != '*')
-            if (c == '\n') ++yylineno;
-
+            if (c == '\n') 
+                ++line;
+                
         if ((c = input()) == '/') break;
         unput(c);
     }

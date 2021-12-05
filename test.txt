@@ -3,8 +3,11 @@ main
     int a;
     char b;
     read b;
-    a = b;
-    write a;
-    write b;
-    write (b+1);
+    a = b;    /*2132
+    2132gbregbe
+    2131
+    */
+    write a;  ///21312
+    write b;  //21312321
+    write (b+1); //2132131vdvdscsd
 }
