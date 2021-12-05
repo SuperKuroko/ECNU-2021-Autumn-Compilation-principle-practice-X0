@@ -782,7 +782,6 @@ void interpret()
                                 s[t] = buffer[cnt_i];
                             }
                         }
-
 						break;
 
 				}

@@ -23,6 +23,7 @@
 	int var_cnt;
 	int var_size;
 	int line;
+	bool is_write;
 	bool is_array_element;
 	
     FILE* fin = NULL;     /* input file */
@@ -59,7 +60,7 @@
     {
         lit,     opr,     lod, 
         sto,     cal,     ini, 
-        jmp,     jpc,      
+        jmp,     jpc,     pop
     };
 
     /* vitrual machine instruction struct */
@@ -175,6 +176,8 @@ var
 	{
 		$$ = position($1);
 		is_array_element = true;
+		gen(lit, 0, table[$$].adr);
+		gen(opr, 0, 2);
 	}
     ;
 
@@ -190,6 +193,7 @@ statement
     | write_stat 
     | compound_stat 
     | expression_stat
+	| SEMI
     ;
 
 if_stat
@@ -202,18 +206,18 @@ while_stat
     ;
 
 write_stat
-	: WRITE expression SEMI
+	: WRITE 
 	{
-		gen(opr, 0, 14);
-		gen(opr, 0, 15);
-	}
+		is_write = true;
+	}expression_stat
+
     ;
 
 read_stat
 	: READ var SEMI
 	{
 		gen(opr, 0, 16);
-		if(is_array_element) gen(sto, -1, table[$2].adr);
+		if(is_array_element) gen(opr, 0, 17);
 		else gen(sto, lev - table[$2].level, table[$2].adr);
 	}
     ;
@@ -223,14 +227,22 @@ compound_stat
     ;
 
 expression_stat
-	: expression SEMI 
-    | SEMI
+	: expression SEMI
+	{
+		if(is_write)
+		{
+			gen(opr, 0, 14);
+			gen(opr, 0, 15);
+			is_write = false;
+		}
+		gen(pop, 0, 1);
+	}
     ;
 
 expression
 	: var BECOMES expression 
 	{
-		if(is_array_element) gen(sto, -2, table[$1].adr);
+		if(is_array_element) gen(opr, 0, 17);
 		else gen(sto, lev - table[$1].level, table[$1].adr);
 	}
     | simple_expr
@@ -292,7 +304,7 @@ factor
 	: LP expression RP 
     | var 
 	{
-		if(is_array_element) gen(lod, -1, table[$1].adr);
+		if(is_array_element) gen(opr, 0 ,18);
 		else gen(lod, lev - table[$1].level, table[$1].adr);
 	}
     | NUMBER
@@ -315,6 +327,8 @@ void init()
 	err = 0;
 	var_cnt = 0;
 	var_size = 0;
+	is_write = false;
+	is_array_element = false;
 }
 
 int position(char* a)
@@ -380,7 +394,7 @@ void display_pcode()
 	int i;
 	char name[][5]=
 	{
-		{"lit"},{"opr"},{"lod"},{"sto"},{"cal"},{"int"},{"jmp"},{"jpc"},
+		{"lit"},{"opr"},{"lod"},{"sto"},{"cal"},{"ini"},{"jmp"},{"jpc"},{"pop"}
 	};
 	
     for (i = 0; i < pcode_pointer; i++)
@@ -443,9 +457,11 @@ void interpret()
 		p = p + 1;      
 		switch (i.f)
 		{
+			case pop:
+				t = t - i.a;
+				break;
 			case lit:	/* 将常量a的值取到栈顶 */
 				t = t + 1;
-				printf("t = %d\n",t);
 				s[t] = i.a;				
 				break;
 			case opr:	/* 数学、逻辑运算 */
@@ -505,7 +521,7 @@ void interpret()
 					case 14:/* 栈顶值输出 */
 						printf("%d", s[t]);
 						fprintf(fout, "%d", s[t]);
-						t = t - 1;
+						//t = t - 1;
 						break;
 					case 15:/* 输出换行符 */
 						printf("\n");
@@ -518,30 +534,20 @@ void interpret()
 						scanf("%d", &(s[t]));
 						fprintf(fout, "%d\n", s[t]);						
 						break;
+					case 17:
+						t = t - 1;
+						s[s[t]+1] = s[t+1];
+					case 18:
+						s[t] = s[s[t]+1];
 				}
 				break;
 			case lod:	/* 取相对当前过程的数据基地址为a的内存的值到栈顶 */
-				if(i.l >= 0)
-				{
-					t = t + 1;
-					s[t] = s[i.a+1];	
-				}
-				else
-				{
-					s[t] = s[i.a+s[t]+1];
-				}
+				t = t + 1;
+				s[t] = s[i.a+1];	
 				break;
 			case sto:	/* 栈顶的值存到相对当前过程的数据基地址为a的内存 */
-				if(i.l >= 0)
-				{
-					s[1+i.a] = s[t];
-					t = t - 1;
-				}
-				else 
-				{
-					s[i.a+s[t-1]+1] = s[t];
-					t = t - 2;
-				}
+				s[1+i.a] = s[t];
+				//t = t - 1;
 				break;
 			case cal:	/* 调用子过程 */
 				s[t + 1] = base(i.l, s, b);	/* 将父过程基地址入栈，即建立静态链 */
