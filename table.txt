@@ -1,3 +1,2 @@
   1     a     var:int      0        3      1
-  2     b     var:char     0        4      1
 

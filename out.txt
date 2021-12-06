@@ -1,6 +1,4 @@
 Start X0
-?u
-117
-u
-v
+?9
+3
 End X0

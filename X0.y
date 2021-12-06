@@ -94,15 +94,14 @@
 %token <number> NUMBER
 %token <ident> IDENT CHAR INT 
 
-%type <number> get_pcode_addr get_table_addr type var
+%type <number> type var pcode_register
 
 %%
 
-main_function
-	:
-	get_pcode_addr
+main_function:
+	pcode_register
 	{
-		gen(jmp, 0 ,0);
+		gen(jmp, 0, 0);
 	} 
 	MAIN
 	{
@@ -120,19 +119,10 @@ main_function
 	}
 	;
 
-get_pcode_addr
-	:
+pcode_register:
 	{
 		$$ = pcode_pointer;
 	}
-	;
-
-get_table_addr
-	:
-	{
-		$$ = table_pointer;
-	}
-	;
 
 declaration_list
 	: declaration_list declaration_stat 
@@ -202,8 +192,30 @@ statement
     ;
 
 if_stat
-	: IF LP expression RP statement 
-    | IF LP expression RP statement ELSE statement
+	:
+    IF LP expression RP pcode_register
+	{
+		gen(jpc, 0, 0);
+	}statement 
+	{
+		pcode[$5].a = pcode_pointer+1;
+	}pcode_register
+	{
+		gen(jmp, 0, 0);
+	}
+	ELSE statement
+	{
+		pcode[$9].a = pcode_pointer;
+	}
+	|
+	IF LP expression RP pcode_register
+	{
+		gen(jpc, 0, 0);
+	}
+	statement 
+	{
+		pcode[$5].a = pcode_pointer;
+	}
     ;
 
 while_stat
@@ -215,7 +227,6 @@ write_stat
 	{
 		is_write = true;
 	}expression_stat
-
     ;
 
 read_stat
@@ -225,6 +236,7 @@ read_stat
 		else gen(opr, 0, 16);
 		if(is_array_element) gen(opr, 0, 17);
 		else gen(sto, lev - table[$2].level, table[$2].adr);
+		gen(pop, 0 ,1);
 	}
     ;
 
@@ -328,8 +340,6 @@ void yyerror(const char *s){
 
 void init()
 {
-	table_pointer = 0;
-	pcode_pointer = 0;
 	lev = 0;
 	err = 0;
 	var_cnt = 0;
