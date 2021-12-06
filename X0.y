@@ -219,7 +219,15 @@ if_stat
     ;
 
 while_stat
-	: WHILE LP expression RP statement
+	: WHILE LP pcode_register expression RP pcode_register
+	{
+		gen(jpc, 0, 0);
+	} 
+	 statement
+	{
+		gen(jmp, 0, $3);
+		pcode[$6].a = pcode_pointer;
+	}
     ;
 
 write_stat

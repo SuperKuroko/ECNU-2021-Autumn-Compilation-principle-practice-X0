@@ -1,21 +1,11 @@
 main
 {
-    int a;
-    read a;
-    if(a < 5)
+    int i;
+    i = 0;
+    while(i < 10)
     {
-        if(a >= 2)
-        {
-            write 1;
-        }
-        else write 2;
-    }
-    else
-    {
-        if(a > 5) write 3;
-        else 
-        {
-            write 4;
-        }
+        if(i < 5) i = i+1;
+        else i = i+2;
+        write i;
     }
 }
