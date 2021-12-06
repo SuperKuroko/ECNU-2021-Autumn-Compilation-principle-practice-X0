@@ -33,6 +33,7 @@
 "]"  {return RSB;}
 "{"  {return LB;}
 "}"  {return RB;}
+"%"  {return PER;}
 
 "!=" {return NEQ;}
 ">=" {return GEQ;}

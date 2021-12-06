@@ -88,8 +88,8 @@
     char* ident;
 }
 
-%token PLUS DIV MINUS MUL EQL GEQ LEQ LSS GTR NEQ
-%token LP RP LB RB LSB RSB MAIN SEMI IF ELSE READ WRITE WHILE BECOMES
+%token PLUS DIV MINUS MUL EQL GEQ LEQ LSS GTR NEQ PER
+%token LP RP LB RB LSB RSB MAIN SEMI IF ELSE READ WRITE WHILE BECOMES 
 
 %token <number> NUMBER
 %token <ident> IDENT CHAR INT 
@@ -311,7 +311,7 @@ additive_expr
 	}
     | additive_expr MINUS term 
 	{
-		gen(opr, 0, 1);
+		gen(opr, 0, 3);
 	}
     ;
 
@@ -324,6 +324,10 @@ term
     | term DIV factor
 	{
 		gen(opr, 0 ,5);
+	}
+	| term PER factor
+	{
+		gen(opr, 0 ,21);
 	}
     ;
 
@@ -494,6 +498,7 @@ void interpret()
 				switch (i.a)
 				{
 					case 0:  /* 函数调用结束后返回 */
+						printf("EDNt = %d\n",t);
 						t = b - 1;
 						p = s[t + 3];
 						b = s[t + 2];
@@ -576,6 +581,10 @@ void interpret()
 						scanf("%c", &(s[t]));
 						fprintf(fout, "%c\n", s[t]);						
 						break;
+					case 21:
+						t = t - 1;
+						s[t] = s[t] % s[t + 1];
+						break;
 				}
 				break;
 			case lod:	/* 取相对当前过程的数据基地址为a的内存的值到栈顶 */
@@ -595,6 +604,7 @@ void interpret()
 				break;
 			case ini:	/* 在数据栈中为被调用的过程开辟a个单元的数据区 */
 				t = t + i.a;	
+				printf("STAt = %d\n",t);
 				break;
 			case jmp:	/* 直接跳转 */
 				p = i.a;
@@ -625,7 +635,7 @@ int base(int l, int* s, int b)
 int main(){
     printf("Input file  ");
 	strcpy(fname,"test.txt");
-    //scanf("%s", fname);
+    scanf("%s", fname);
     if((fin = fopen(fname, "r")) == NULL)
     {
         printf("open file error!\n");

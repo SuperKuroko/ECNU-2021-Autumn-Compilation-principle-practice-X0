@@ -1,11 +1,10 @@
 main
 {
-    int i;
-    i = 0;
-    while(i < 10)
-    {
-        if(i < 5) i = i+1;
-        else i = i+2;
-        write i;
-    }
+    int a;
+    int b;
+    int c;
+    a = 7;
+    b = 3;
+    c = a-7/3*3;
+    write c;
 }
