@@ -1,4 +1,3 @@
 Start X0
-?100
-2
+false
 End X0

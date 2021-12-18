@@ -9,6 +9,7 @@ main
     i = 2;
     while(i <= n)
     {
+        write i;
         flag = 1;
         j = 2;
         while(j != i)

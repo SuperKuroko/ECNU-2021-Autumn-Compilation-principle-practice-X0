@@ -16,11 +16,18 @@
 "main"  {return MAIN;}
 "int"   {return INT;}
 "char"  {return CHAR;}
+"bool"  {return BOOL;}
 "if"    {return IF;}
 "else"  {return ELSE;}
 "write" {return WRITE;}
 "read"  {return READ;}
 "while" {return WHILE;}
+"true"  {return TRUE;}
+"false" {return FALSE;}
+"and"   {return AND;}
+"not"   {return NOT;}
+"xor"   {return XOR;}
+"or"    {return OR;}
 
 "="  {return BECOMES;}
 "+"  {return PLUS;}
@@ -29,11 +36,15 @@
 "("  {return LP;}
 ")"  {return RP;}
 "/"  {return DIV;}
+"%"  {return PER;}
 "["  {return LSB;}
 "]"  {return RSB;}
 "{"  {return LB;}
 "}"  {return RB;}
-"%"  {return PER;}
+"&"  {return AND;}
+"!"  {return NOT;}
+"^"  {return XOR;}
+"|"  {return OR;}
 
 "!=" {return NEQ;}
 ">=" {return GEQ;}

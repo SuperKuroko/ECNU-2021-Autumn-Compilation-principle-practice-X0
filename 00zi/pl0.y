@@ -1,88 +1,17 @@
 %{
-    #define al 10
-    #define cxmax 2000
-    #define txmax 1000
-    #define amax 2048
-    #define strmax 20000
-    #define stacksize 3000
-
     #include<stdio.h>
     #include<stdlib.h>
     #include<malloc.h>
     #include<memory.h>
     #include<string.h>
     #include<stdbool.h>
+    #include "head.h"
+
     FILE* fin;
-    FILE* foutput;
-    FILE* ftable;
-    char fname[al];
-    
-    int tx;/*table */
-    int cx;/* code*/
-    int px;/*proctable*/
-    int lev;
-    int proctable[3];
-    char id[al];
-    extern int line;
-    int err;
-    int c_num;/* use to record const */
-    int fortable[cxmax];
-    int foroffset[cxmax];
-    int forx;
-    int vartable[cxmax];
-    int  varx;
-    int total_var;
-    int tem;
-    int offset;
-    int preVar;
-    int preVar_cnt;
-    int proc_p;
-    int pass_cnt;
-    int isString;
-    char buffer[strmax];
-    char temstr[strmax];
-
-    enum fct 
-    {
-        lit,     opr,     lod, 
-        sto,     cal,     ini, 
-        jmp,     jpc,     
-    };
-    struct instruction
-    {
-        enum fct f;   /* 虚拟机代码指令 */
-        int l;        /* 引用层与声明层的层次差 */
-        int a;        /* 根据f的不同而不同 */
-    };
-    struct instruction code[cxmax]; /* 存放虚拟机代码的数组 */
-    enum object 
-    {
-        constant, 
-        variable, 
-        procedure,
-    };
-    enum type
-    {
-        xint,
-        xchar,
-        xvoid
-    };
-
-    /* 符号表结构 */
-    struct tablestruct
-    {
-        char name[al];      /* 名字 */
-        enum object kind;   /* 类型：const，var或procedure */
-        int val;            /* 数值，仅const使用 */
-        int level;          /* 所处层，仅const不使用 */ 
-        int adr;            /* 地址，仅const不使用 */
-        int size;           /* 需要分配的数据区空间, 仅procedure使用 */
-        enum type t; /* type */
-        int is_arry;
-        int parameter_cnt;
-    };
-    struct tablestruct table[txmax]; /* 符号表 */
-
+    FILE* fresult = NULL;
+    FILE* ftable = NULL;
+    FILE* fbug = NULL;
+    FILE* fpcode = NULL;
 
     void init();
     void enter(enum object k);
@@ -93,8 +22,10 @@
     void listall();
     void interpret();
     int base(int l, int* s, int b);
-
-
+    void yyerror(const char* s);
+    int position(char* a);
+    int yylex();
+    void redirectInput(FILE *input);
 %}
 %union{
     int NUM;
@@ -105,9 +36,9 @@
 %token<NUM> num
 %token<VAR> var CHAR INT VOID STRING
 %token<OP> Plus Div Minus Mul EQL GEQ LEQ LSS GTR NEQ
-%token END LB RB LP RP MAIN SEMI COMMA CONST PROC IF ELSE READ WRITE FOR WHILE LMB RMB RETURN
+%token END LB RB LP RP MAIN SEMI_t COMMA CONST PROC IF ELSE READ WRITE FOR WHILE LMB RMB RETURN
 %type<NUM> get_table_addr get_code_addr declaration_list VarInit Vardecl Vardef 
-%type<NUM> block var_p var_t prevardecl prevardef pass_factor
+%type<NUM> block var_p var_t prevardecl prevardef pass_factor for_3
 %type statement VarInit Vardef condition STRING defunc
 
 %%
@@ -124,13 +55,16 @@ procstart:
         /* Main procedure */
         strcpy(id, "main");
         _enter(procedure, 0);
-        table[tx].a+..+dr = cx;
+        table[tx].adr = cx;
         table[tx].t = xvoid;
         code[$1].a = cx;
         proctable[px] = tx;
 
-    }
+    } get_table_addr
     LB block RB
+    {
+        table[$6].size =  preVar_cnt;
+    }
     ;
 
 var_t: INT {$$ = 1;}| CHAR {$$ = 2;}| VOID {$$ = 3;}
@@ -159,6 +93,7 @@ defunc:
     }
     LB block RB 
     {
+        table[$4].size = preVar_cnt;
         preVar_cnt = 0;
         total_var = 0;
         proc_p = 0;
@@ -206,6 +141,7 @@ block:
     statements
     {
         gen(opr, preVar_cnt, 0);
+        preVar_cnt = $1 + preVar_cnt;
     }
     ;
 
@@ -268,14 +204,29 @@ Vardef: var
         ++varx;
     }
     ;
-
+Constdecl:
+    CONST CONSTInit SEMI Constdecl
+    |
+    ;
+CONSTInit:
+    constdef
+    |CONSTInit COMMA constdef
+    ;
+constdef:
+    var EQL num
+    {
+        strcpy(id, $1);
+        c_num = $3;
+        _enter(constant, 0);
+    }
+    ;
 
 /*statement */
 var_p :var
     {
         isString = 0;
         $$ = position($1);
-        if(table[$$].t == xchar) isString = 1;
+        if(table[$$].t == xchar && table[$$].is_arry) isString = 1;
 
     }
     | var LMB factor RMB
@@ -292,20 +243,22 @@ statements :
     ;
 statement:
        asgnstm_semi
+    |   callstm
     |   ifstm
     |   whilestm
     |   readstm
     |   writestm
+    |   forstm
     |   returnstm
     ;
-asgnstm_semi: asgnstm_tot SEMI;
+asgnstm_semi: asgnstm_tot get_sto SEMI;
 
-asgnstm_tot: asgnstm get_sto
+asgnstm_tot: asgnstm
     | asgnstm COMMA asgnstm_tot
     ;
 get_sto:
     {
-        while(forx > 0)
+        while(forx > for_var)
         {
             if(table[fortable[forx - 1]].is_arry){
                 gen(sto, 0, 0);
@@ -323,7 +276,7 @@ returnstm:
         if(table[proc_p].t == xvoid) yyerror("error void cannot return\n");
     }
     RETURN 
-    factor SEMI
+    expression SEMI
     {
         gen(sto, -1, 0);
         gen(opr, preVar_cnt, 0);
@@ -363,8 +316,8 @@ asgnstm:
     }
     |var_p EQL STRING
     {
-        printf("-----------qweqwcasdasdasd---------------\n");
         strcpy(temstr, $3);
+        printf("-----------qweqwcasdasdasd---------------: %c  \n", temstr[0]);
         if(isString)
         {
             int teml = table[$1].is_arry;
@@ -376,19 +329,64 @@ asgnstm:
                 fortable[forx] = $1;
                 ++forx;
             }
+        } else{
+        printf("-----------qweqwcasdasdasd---------------: %c  \n", temstr[0]);
+            if(strlen(temstr) > 1) yyerror("not a char\n");
+            gen(lit, 0, temstr[0]);
+            fortable[forx] = $1;
+            ++forx;
         }
     }
     ;
-
-
+callstm:
+    ;
+forstm:
+    FOR LP 
+    for_1 SEMI get_code_addr condition get_code_addr
+    {
+        gen(jpc, 0, 0);
+    }
+    SEMI for_3
+    {
+        for_var += $10;
+        for_lev[for_lx] = $10;
+        ++for_lx;
+    }
+    RP compstm 
+    {
+        for_var -= for_lev[--for_lx];
+    }
+    get_sto
+    {
+        gen(jmp, 0, $5);
+        printf("jpc = %d\n", $7);
+        code[$7].a = cx;
+    }
+    ;
+for_1:  asgnstm_tot get_sto|
+    ;
+for_2: condition |
+    ;
+for_3:  asgnstm { $$ = 1; }
+    |   asgnstm COMMA for_3 {$$ = 1 + $3;}
+    ;
 ifstm: IF LP condition RP get_code_addr
     {
         gen(jpc,0,0);
     }
-    compstm
-    {code[$5].a = cx;}
+    compstm get_code_addr
+    {
+        gen(jmp, 0, 0);
+        code[$5].a = cx;
+    }
+    elsestm 
+    {
+        code[$8].a = cx;
+    }
     ;
-
+elsestm: ELSE compstm 
+    |
+    ;
 whilestm: WHILE LP get_code_addr condition RP get_code_addr
     {
         gen(jpc, 0, 0);
@@ -425,23 +423,36 @@ readstm: READ var_p SEMI
     ;
 writestm:WRITE var_p SEMI
     {
-        if(table[$2].is_arry == 0){
+        if(table[$2].is_arry == 0 && table[$2].t != xchar){
             gen(lod, lev - table[$2].level,table[$2].adr);
             gen(opr, 0, 14);   
             gen(opr, 0, 15);
-        }else{
-            if(isString == 0){
+        }else if(table[$2].is_arry == 0 && table[$2].t == xchar){
+            gen(lod, lev - table[$2].level,table[$2].adr);
+            gen(opr, -1, 14);   
+            gen(opr, 0, 15);
+        }
+        else{
+            if(isString == 0 && table[$2].t == xchar){
                 gen(lod, 0, 0);
                 gen(opr, -1, 14);   
                 gen(opr, 0, 15);
+            }else if(isString == 0 && table[$2].t == xint){
+                gen(lod, 0, 0);
+                gen(opr, 0, 14);
+                gen(opr, 0, 15);
             }else{
-                int str_l = 0;
                 for(int i =0; i < table[$2].is_arry; i++){
                     gen(lod, lev - table[$2].level, table[$2].adr + i);
                 }
                 gen(opr, table[$2].is_arry, 14);
             }
         }
+    }
+    | WRITE expression SEMI
+    {
+        gen(opr, 0, 14);
+        gen(opr, 0, 15);
     }
     ;
 
@@ -521,11 +532,50 @@ factor: var_p
         gen(lit, 0, $1);
     }
     | LP expression RP
+    |call_func
     ;
+call_func:
+    var_p 
+    {
+        ++px;
+        proctable[px] = $1;
+    }
+    LP pass_factor RP
+    {
+        if(table[$1].kind != procedure) yyerror("Is  not a procedure \n");
+        else{
+            if($4 !=  table[$1].parameter_cnt ) yyerror("parameter number not match\n");
+            gen(cal, 0, table[$1].adr);
+            if(table[$1].t != xvoid) gen(lod, -1, 0); /* get return */
+        }
+    }
+    ;
+
+pass_factor: factor {$$ = 1;}
+    | factor COMMA pass_factor
+        {$$ = 1 + $3;}
+    | {$$ = 0;}
+    ;
+
+get_table_addr:
+    {
+        $$ = tx;
+    }
+    ;
+get_code_addr:
+    {
+        $$ = cx;
+    }
+    ;
+SEMI: SEMI_t
+    |
+    {
+        yyerror("miss a SEMICOM");
+    }
 %%
 
-yyerror(const char* s){
-    printf("error!:%s\n, located at %d line\n", s, line);
+void yyerror(const char* s){
+    fprintf(fbug,"error!:%s , located at %d line\n", s, line);
 }
 void init()
 {
@@ -534,13 +584,14 @@ void init()
 	px = 0;
     forx = 0;
     varx = 0;
-  lev = 0;   
-  proctable[0] = 0;
-  c_num = 0;
-  err = 0;
-  total_var = 0;
-
-  offset = 0;
+    lev = 0;   
+    proctable[0] = 0;
+    c_num = 0;
+    err = 0;
+    total_var = 0;
+    for_var = 0;
+    for_lx = 0;
+    offset = 0;
 }
 int position(char* a)
 {
@@ -616,8 +667,8 @@ void listall()
     for (i = 0; i < cx; i++)
     {
         printf("%d %s %d %d\n", i, name[code[i].f], code[i].l, code[i].a);
-        /* fprintf(fcode,"%d %s %d %d\n", i, name[code[i].f], code[i].l, code[i].a);
-        */
+        fprintf(fpcode,"%d %s %d %d\n", i, name[code[i].f], code[i].l, code[i].a);
+
         
     }
 }
@@ -635,30 +686,27 @@ void displaytable()
 				case constant:
 					printf("    %d const %s ", i, table[i].name);
 					printf("val=%d\n", table[i].val);
-					/* fprintf(ftable, "    %d const %s ", i, table[i].name);
-					fprintf(ftable, "val=%d\n", table[i].val); */
+					fprintf(ftable, "    %d const %s ", i, table[i].name);
+					fprintf(ftable, "val=%d\n", table[i].val);
 					break;
 				case variable:
 					printf("    %d var   %s ", i, table[i].name);
 					printf("lev=%d addr=%d ", table[i].level, table[i].adr);
                     if(table[i].t == xint) printf("type = int \n");
                     else printf("type = char \n");
-					/* fprintf(ftable, "    %d var   %s ", i, table[i].name);
+					fprintf(ftable, "    %d var   %s ", i, table[i].name);
 					fprintf(ftable, "lev=%d addr=%d\n", table[i].level, table[i].adr);
-                    */
 					break;
 				case procedure:
 					printf("    %d proc  %s ", i, table[i].name);
 					printf("lev=%d addr=%d size=%d\n", table[i].level, table[i].adr, table[i].size);
-                    /*
 					fprintf(ftable,"    %d proc  %s ", i, table[i].name);
 					fprintf(ftable,"lev=%d addr=%d size=%d\n", table[i].level, table[i].adr, table[i].size);
-                    */
 					break;
 			}
 		}
 		printf("\n");
-		/* fprintf(ftable, "\n"); */
+		fprintf(ftable, "\n");
 }
 void interpret()
 {
@@ -669,7 +717,7 @@ void interpret()
 	int s[stacksize];	/* 栈 */
 
 	printf("Start pl0\n");
-	/* fprintf(fresult,"Start pl0\n"); */
+	fprintf(fresult,"Start pl0\n");
 	s[0] = 0; /* s[0]不用 */
 	s[1] = 0; /* 主程序的三个联系单元均置为0 */
 	s[2] = 0;
@@ -743,7 +791,7 @@ void interpret()
 					case 14:/* 栈顶值输出 */
                         if(i.l == 0){
                             printf("%d", s[t]);
-                            /* fprintf(fresult, "%d", s[t]); */
+                            fprintf(fresult, "%d", s[t]);
                             t = t - 1;
                         }else if(i.l > 0){
                             memset(buffer, 0, sizeof(buffer));
@@ -754,6 +802,7 @@ void interpret()
                             }
                             printf("here output %s", buffer);
                         }else if(i.l == -1){
+                            
                             char c = s[t];
                             t = t - 1;
                             printf("%c", c);
@@ -761,7 +810,7 @@ void interpret()
 						break;
 					case 15:/* 输出换行符 */
 						printf("\n");
-					    /* fprintf(fresult,"\n"); */
+					    fprintf(fresult,"\n"); 
 						break;
 					case 16:/* 读入一个输入置于栈顶 */
                         if(i.l == 0){
@@ -772,9 +821,7 @@ void interpret()
                             /* fprintf(fresult, "%d\n", s[t]); */						
                         }else{
                             printf("? (need a string)");
-                            scanf("%s", &buffer);
-                            int buffer_len = strlen(buffer);
-
+                            scanf("%s", buffer);
                             printf("i.l %d, t %d \n", i.l, t);
                             for(int cnt_i = 0; cnt_i < i.l; cnt_i++){
                                 printf("t %d, buffer %d \n", t, buffer[cnt_i]);
@@ -782,6 +829,7 @@ void interpret()
                                 s[t] = buffer[cnt_i];
                             }
                         }
+
 						break;
 
 				}
@@ -806,11 +854,8 @@ void interpret()
 			case sto:	/* 栈顶的值存到相对当前过程的数据基地址为a的内存 */
                 if(i.l < 0 && i.a != 0){
                     s[b + i.a] = s[b + i.l];   
-                    printf("wa!!\n");
-                    printf("i.l = %d, i.a = %d\n", i.l, i.a);
                 }else if(i.l < 0 && i.a == 0){
                     s[0] = s[t];
-                    printf("s[0] is %d \n", s[0]);
                 }else if(i.l == 0 && i.a == 0){
                     s[base(s[t - 1], s, b) + s[t - 2] + s[t - 3]] = s[t];
                     t = t - 4;
@@ -852,9 +897,8 @@ void interpret()
 		}
 	} while (p != 0);
 	printf("End pl0\n");
-	/*fprintf(fresult,"End pl0\n");*/
+	fprintf(fresult,"End pl0\n");
 }
-
 int base(int l, int* s, int b)
 {
     int bl;
@@ -867,6 +911,7 @@ int base(int l, int* s, int b)
 }
 
 int main(){
+    line = 0;
     printf("Input file        ");
     scanf("%s", fname);
     if((fin = fopen(fname, "r")) == NULL)
@@ -874,7 +919,7 @@ int main(){
         printf("open file error!\n");
         exit(1);
     }
-    /* if ((foutput = fopen("foutput.txt", "w")) == NULL)
+    if ((fresult = fopen("fresult.txt", "w")) == NULL)
     {
 		printf("Can't open the output file!\n");
 		exit(1);
@@ -884,17 +929,29 @@ int main(){
 		printf("Can't open ftable.txt file!\n");
 		exit(1);
 	}
-    */
+	if ((fpcode = fopen("fpcode.txt", "w")) == NULL)
+	{
+		printf("Can't open ftable.txt file!\n");
+		exit(1);
+	}
+	if ((fbug = fopen("fbug.txt", "w")) == NULL)
+	{
+		printf("Can't open ftable.txt file!\n");
+		exit(1);
+	}
+    
     redirectInput(fin);
     init();
-
     yyparse();
     displaytable();
     listall();
     interpret();
+
     fclose(fin);
-    /* fclose(ftable);
-    fclose(foutput);
-    */
+    fclose(ftable);
+    fclose(fresult);
+    fclose(fpcode);
+    fclose(fbug);
+
     return 0;
 }

@@ -1,12 +1,17 @@
 %{
+    
     #include<stdio.h>
     #include "yacc.h"
     int line;
     char l_buffer[20000];
-    void yyerror(char*);
     int yywrap(void);
+
     void line_commet();
     void block_commet();
+    int yywrap(void);
+    int scanch(void);
+    int  yygetchar(void);
+    void redirectInput(FILE *input);
 %}
 
 num [0-9]+
@@ -49,7 +54,7 @@ dev [/]
 "-" {return Minus;}
 "*" { return Mul;}
 [/] { return Div;}
-[;] {return SEMI;}
+[;] {return SEMI_t;}
 [,] {return COMMA;}
 {strb} {
         int c;
@@ -86,7 +91,7 @@ int  yygetchar(void){
 }
 void line_commet(){
     char c;
-    while(c = input() != '\n'){
+    while((c = input()) != '\n'){
     }
     ++line;
 }
@@ -121,7 +126,7 @@ int scanch(void) {
       case '"':  return '"' ;
       case '\'': return '\'';
       default:
-        printf("unknown escape sequence %s", c);
+        printf("unknown escape sequence %c", c);
         exit(1);
     }
   }

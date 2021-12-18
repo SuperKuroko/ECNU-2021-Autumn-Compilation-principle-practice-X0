@@ -59,25 +59,32 @@ extern int yydebug;
     LSS = 265,
     GTR = 266,
     NEQ = 267,
-    PER = 268,
-    LP = 269,
-    RP = 270,
-    LB = 271,
-    RB = 272,
-    LSB = 273,
-    RSB = 274,
-    MAIN = 275,
-    SEMI = 276,
-    IF = 277,
-    ELSE = 278,
-    READ = 279,
-    WRITE = 280,
-    WHILE = 281,
-    BECOMES = 282,
-    NUMBER = 283,
-    IDENT = 284,
-    CHAR = 285,
-    INT = 286
+    CHAR = 268,
+    INT = 269,
+    BOOL = 270,
+    PER = 271,
+    XOR = 272,
+    OR = 273,
+    AND = 274,
+    NOT = 275,
+    LP = 276,
+    RP = 277,
+    LB = 278,
+    RB = 279,
+    LSB = 280,
+    RSB = 281,
+    MAIN = 282,
+    SEMI = 283,
+    IF = 284,
+    ELSE = 285,
+    READ = 286,
+    WRITE = 287,
+    WHILE = 288,
+    BECOMES = 289,
+    TRUE = 290,
+    FALSE = 291,
+    NUMBER = 292,
+    IDENT = 293
   };
 #endif
 /* Tokens.  */
@@ -91,25 +98,32 @@ extern int yydebug;
 #define LSS 265
 #define GTR 266
 #define NEQ 267
-#define PER 268
-#define LP 269
-#define RP 270
-#define LB 271
-#define RB 272
-#define LSB 273
-#define RSB 274
-#define MAIN 275
-#define SEMI 276
-#define IF 277
-#define ELSE 278
-#define READ 279
-#define WRITE 280
-#define WHILE 281
-#define BECOMES 282
-#define NUMBER 283
-#define IDENT 284
-#define CHAR 285
-#define INT 286
+#define CHAR 268
+#define INT 269
+#define BOOL 270
+#define PER 271
+#define XOR 272
+#define OR 273
+#define AND 274
+#define NOT 275
+#define LP 276
+#define RP 277
+#define LB 278
+#define RB 279
+#define LSB 280
+#define RSB 281
+#define MAIN 282
+#define SEMI 283
+#define IF 284
+#define ELSE 285
+#define READ 286
+#define WRITE 287
+#define WHILE 288
+#define BECOMES 289
+#define TRUE 290
+#define FALSE 291
+#define NUMBER 292
+#define IDENT 293
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -120,7 +134,7 @@ union YYSTYPE
     int number;
     char* ident;
 
-#line 124 "y.tab.h"
+#line 138 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

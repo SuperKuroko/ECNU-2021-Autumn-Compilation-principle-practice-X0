@@ -497,16 +497,21 @@ int yy_flex_debug = 0;
 char *yytext;
 #line 1 "pl0.l"
 #line 2 "pl0.l"
+    
     #include<stdio.h>
     #include "yacc.h"
     int line;
     char l_buffer[20000];
-    void yyerror(char*);
     int yywrap(void);
+
     void line_commet();
     void block_commet();
-#line 509 "p.c"
-#line 510 "p.c"
+    int yywrap(void);
+    int scanch(void);
+    int  yygetchar(void);
+    void redirectInput(FILE *input);
+#line 514 "p.c"
+#line 515 "p.c"
 
 #define INITIAL 0
 
@@ -723,9 +728,9 @@ YY_DECL
 		}
 
 	{
-#line 21 "pl0.l"
+#line 26 "pl0.l"
 
-#line 729 "p.c"
+#line 734 "p.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -784,163 +789,163 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 22 "pl0.l"
+#line 27 "pl0.l"
 {return MAIN;}
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 23 "pl0.l"
+#line 28 "pl0.l"
 {return INT;}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 24 "pl0.l"
+#line 29 "pl0.l"
 {return CHAR;}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 25 "pl0.l"
+#line 30 "pl0.l"
 {return CONST;}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 26 "pl0.l"
+#line 31 "pl0.l"
 {return IF;}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 27 "pl0.l"
+#line 32 "pl0.l"
 {return ELSE;}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 28 "pl0.l"
+#line 33 "pl0.l"
 {return WRITE;}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 29 "pl0.l"
+#line 34 "pl0.l"
 {return READ;}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 30 "pl0.l"
+#line 35 "pl0.l"
 {return WHILE;}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 31 "pl0.l"
+#line 36 "pl0.l"
 {return FOR;}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 32 "pl0.l"
+#line 37 "pl0.l"
 {return VOID;}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 33 "pl0.l"
+#line 38 "pl0.l"
 {return RETURN;}
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 35 "pl0.l"
+#line 40 "pl0.l"
 {return LMB;}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 36 "pl0.l"
+#line 41 "pl0.l"
 {return RMB;}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 37 "pl0.l"
+#line 42 "pl0.l"
 {return LP;}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 38 "pl0.l"
+#line 43 "pl0.l"
 {return RP;}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 39 "pl0.l"
+#line 44 "pl0.l"
 {return LB;}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 40 "pl0.l"
+#line 45 "pl0.l"
 {return RB;}
 	YY_BREAK
 case 19:
 /* rule 19 can match eol */
 YY_RULE_SETUP
-#line 41 "pl0.l"
+#line 46 "pl0.l"
 {++line;}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 42 "pl0.l"
+#line 47 "pl0.l"
 {return NEQ;}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 43 "pl0.l"
+#line 48 "pl0.l"
 {return GEQ;}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 44 "pl0.l"
+#line 49 "pl0.l"
 {return LEQ;}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 45 "pl0.l"
+#line 50 "pl0.l"
 {return GTR;}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 46 "pl0.l"
+#line 51 "pl0.l"
 {return LSS;}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 47 "pl0.l"
+#line 52 "pl0.l"
 { return EQL;}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 48 "pl0.l"
+#line 53 "pl0.l"
 { return Plus;}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 49 "pl0.l"
+#line 54 "pl0.l"
 {return Minus;}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 50 "pl0.l"
+#line 55 "pl0.l"
 { return Mul;}
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 51 "pl0.l"
+#line 56 "pl0.l"
 { return Div;}
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 52 "pl0.l"
-{return SEMI;}
+#line 57 "pl0.l"
+{return SEMI_t;}
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 53 "pl0.l"
+#line 58 "pl0.l"
 {return COMMA;}
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 54 "pl0.l"
+#line 59 "pl0.l"
 {
         int c;
         int idx = 0;
@@ -956,7 +961,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 66 "pl0.l"
+#line 71 "pl0.l"
 {
     printf("get a num %d\n", atoi(yytext));
     yylval.NUM = atoi(yytext);
@@ -965,27 +970,27 @@ YY_RULE_SETUP
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 71 "pl0.l"
+#line 76 "pl0.l"
 {yylval.VAR = (char*)malloc(strlen(yytext) + 1);
         strcpy(yylval.VAR, yytext);
          return var;}
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 74 "pl0.l"
+#line 79 "pl0.l"
 {line_commet();}
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 75 "pl0.l"
+#line 80 "pl0.l"
 {block_commet();}
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 76 "pl0.l"
+#line 81 "pl0.l"
 ECHO;
 	YY_BREAK
-#line 989 "p.c"
+#line 994 "p.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1990,7 +1995,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 76 "pl0.l"
+#line 81 "pl0.l"
 
 
 void redirectInput(FILE *input){
@@ -2004,7 +2009,7 @@ int  yygetchar(void){
 }
 void line_commet(){
     char c;
-    while(c = input() != '\n'){
+    while((c = input()) != '\n'){
     }
     ++line;
 }
@@ -2039,7 +2044,7 @@ int scanch(void) {
       case '"':  return '"' ;
       case '\'': return '\'';
       default:
-        printf("unknown escape sequence %s", c);
+        printf("unknown escape sequence %c", c);
         exit(1);
     }
   }
