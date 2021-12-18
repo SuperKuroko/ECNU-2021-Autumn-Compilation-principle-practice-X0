@@ -88,13 +88,14 @@
     char* ident;
 }
 
-%token PLUS DIV MINUS MUL EQL GEQ LEQ LSS GTR NEQ CHAR INT BOOL PER XOR OR AND NOT 
-%token LP RP LB RB LSB RSB MAIN SEMI IF ELSE READ WRITE WHILE BECOMES TRUE FALSE
+%token PLUS DIV MINUS MUL EQL GEQ LEQ LSS GTR NEQ CHAR INT BOOL PER XOR OR AND NOT ODD
+%token LP RP LB RB LSB RSB MAIN SEMI IF ELSE READ WRITE WHILE BECOMES TRUE FALSE FOR
+ 
 
 %token <number> NUMBER
 %token <ident> IDENT 
 
-%type <number> type var pcode_register
+%type <number> type var pcode_register for_exp1 for_exp2 for_exp3
 
 %%
 
@@ -189,6 +190,7 @@ statement
     | read_stat 
     | write_stat 
     | compound_stat 
+	| for_stat
     | expression_stat
 	| SEMI
     ;
@@ -225,6 +227,43 @@ while_stat
 		gen(jmp, 0, $3);
 		pcode[$6].a = pcode_pointer;
 	}
+    ;
+	
+for_stat
+	: FOR LP for_exp1 SEMI
+	{
+		if($3 == 0) gen(pop, 0, 1);
+	} pcode_register for_exp2 SEMI pcode_register  
+	{
+		gen(jpc, 0, 0);
+		gen(jmp, 0, 0);
+	}
+ 	for_exp3  
+	{
+		if($11 == 0) gen(pop, 0, 1);
+		gen(jmp, 0, $6);
+	}
+    RP pcode_register statement
+	{
+		gen(jmp, 0, $9+2);
+		pcode[$9].a = pcode_pointer;
+		pcode[$9+1].a = $14;
+	}
+	;
+
+for_exp1
+	: expression {$$ = 0;}
+    | {$$ = 1;}
+    ;
+
+for_exp2
+	: simple_expr {$$ = 0;}
+    | {$$ = 1;}
+    ;
+
+for_exp3
+	: expression {$$ = 0;}
+    | {$$ = 1;}
     ;
 
 write_stat
@@ -322,6 +361,10 @@ logic_expr
 
 additive_expr
 	: term 
+	| ODD term
+	{
+		gen(opr, 0, 20);
+	}
     | additive_expr PLUS term 
 	{
 		gen(opr, 0, 2);
@@ -350,7 +393,7 @@ term
 
 factor
 	: LP expression RP 
-    | var 
+    | var
 	{
 		if(is_array_element) gen(ald, 0 ,0);
 		else gen(lod, 0, table[$1].adr);
@@ -372,7 +415,7 @@ factor
 %%
 
 void yyerror(const char *s){
-	err++;
+	//err++;
     printf("error!:%s\n, located at %d line\n", s, line);
 }
 
@@ -469,13 +512,13 @@ void display_table()
 		switch (table[i].kind)
 		{
 			case variable:
-				printf("%3d     %s     var:%s        %3d    %3d\n",i,table[i].name,map[table[i].X0_type],table[i].adr,table[i].size);
-				fprintf(ftable, "%3d     %s     var:%s        %3d    %3d\n",i,table[i].name,map[table[i].X0_type],table[i].adr,table[i].size);
+				printf("%3d     %s     var:%s     %3d    %3d\n",i,table[i].name,map[table[i].X0_type],table[i].adr,table[i].size);
+				fprintf(ftable, "%3d     %s     var:%s     %3d    %3d\n",i,table[i].name,map[table[i].X0_type],table[i].adr,table[i].size);
 				break;
 
 			case array:
-				printf("%3d     %s     ary:%s        %3d    %3d\n",i,table[i].name,map[table[i].X0_type],table[i].adr,table[i].size);
-				fprintf(ftable, "%3d     %s     ary:%s        %3d    %3d\n",i,table[i].name,map[table[i].X0_type],table[i].adr,table[i].size);
+				printf("%3d     %s     ary:%s     %3d    %3d\n",i,table[i].name,map[table[i].X0_type],table[i].adr,table[i].size);
+				fprintf(ftable, "%3d     %s     ary:%s     %3d    %3d\n",i,table[i].name,map[table[i].X0_type],table[i].adr,table[i].size);
 				break;
 
 			case function:
@@ -631,6 +674,15 @@ void interpret()
 					case 19:
 						if(s[t] != 0) s[t] = 0;
 						else s[t] = 1;
+						break;
+					case 20:
+						s[t] = s[t]%2;
+						break;
+					case 21:
+						s[t]++;
+						break;
+					case 22:
+						s[t]--;
 						break;
 				}
 				break;

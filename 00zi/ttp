@@ -1,6 +1,0 @@
-main{
-	int p;
-	p = 2;
-	write p;
-
-}
