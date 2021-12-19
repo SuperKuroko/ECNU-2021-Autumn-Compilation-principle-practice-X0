@@ -99,7 +99,8 @@
 
 %%
 
-main_function:
+main_function
+	: def_function
 	pcode_register
 	{
 		gen(jmp, 0, 0);
@@ -118,6 +119,21 @@ main_function:
 	{
 		gen(opr, 0, 0);
 	}
+	;
+
+def_function
+	: type IDENT LP paremeter RP
+	LB declaration_list statement_list return_stat
+	RB def_function
+	|
+	;
+
+paremeter
+	:
+	;
+
+return_stat
+	:
 	;
 
 pcode_register
