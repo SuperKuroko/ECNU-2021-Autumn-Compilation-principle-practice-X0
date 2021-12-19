@@ -29,7 +29,7 @@
 "xor"   {return XOR;}
 "or"    {return OR;}
 "odd"   {return ODD;}
-"for"   {printf("here is a for \n");return FOR;}
+"for"   {return FOR;}
  
 "="  {return BECOMES;}
 "+"  {return PLUS;}

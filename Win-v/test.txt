@@ -1,18 +1,25 @@
+int f()
+{
+  int a;
+  int b;
+  a = 2+3;
+  b = 1+5;
+  write a*b;
+}
+
+
+int k()
+{
+  int x;
+  int y;
+  x = 2+7;
+  y = 2-8;  
+  write x+y;
+}
+
 main
 {
-int i;
-int j;
-char c;
-c=97;
-for(i=0;i<10;i=i+1){
-    for(j=0;j<10;){        
-        if(j>i) 
-          write(10*i+j);
-        else
-          write(j);
-        j=j+1;
-    }   
+  int c;
+  int a[10];
+  bool c[100];
 }
-write(c);
-}
-/*±éÀú0-99£¬ÈôÎªÁœÎ»ÊýÊä³ö1£¬¶ÔÓÚžöÎ»ÊýŽóÓÚÊ®Î»ÊýµÄÊýÊä³öÆä±ŸÉí£¬·ñÔòÖ»Êä³öžöÎ»*/

@@ -759,7 +759,7 @@ YY_RULE_SETUP
 case 19:
 YY_RULE_SETUP
 #line 32 "X0.l"
-{printf("here is a for \n");return FOR;}
+{return FOR;}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP

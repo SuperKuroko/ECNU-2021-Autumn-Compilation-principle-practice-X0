@@ -17,6 +17,7 @@
     int lev;
 	char fname[20];
     char id[var_name_length];
+	char function_name[var_name_length];
     int num;
 	int array_size;
 	int err;
@@ -26,11 +27,11 @@
 	bool is_write;
 	bool is_array_element;
 	
-    FILE* fin = NULL;     /* input file */
-    FILE* ftable = NULL;  /* the file which store the table output */
-    FILE* fpcode = NULL;  /* the file which store the pcode output */
-    FILE* fout = NULL;    /* output file */
-    FILE* fmistake = NULL;  /* the file which store the error infomation (if had) */
+    FILE* fin = NULL;    
+    FILE* ftable = NULL; 
+    FILE* fpcode = NULL; 
+    FILE* fout = NULL;    
+    FILE* fmistake = NULL;  
 
     enum object 
 	{
@@ -46,16 +47,18 @@
 		X0_bool
 	};
 	enum xtype xt;
+
     struct tablestruct
     {
-        char name[var_name_length]; /* char array to store the var name*/
-        enum object kind;           /* kind：const，var or procedure */
-        int adr;                    /* adr: for all except const var */
-        int size;                   /* size to alloc, only for procedure */
-		enum xtype X0_type;         /* only for var or const */
+        char name[var_name_length]; 
+        enum object kind;           
+        int adr;                   
+        int size;                   
+		enum xtype X0_type;
+		char master[var_name_length];
     };
-
     struct tablestruct table[table_length]; 
+
     enum fct 
     {
         lit,     opr,     lod, 
@@ -64,23 +67,22 @@
 		ast,     ald,
     };
 
-    /* vitrual machine instruction struct */
     struct instruction
     {
-        enum fct f;   /* the type of instruction */
-        int l;        /* the diff between reference level and declaration level */
-        int a;        /* depend on the val of f */
+        enum fct f;   
+        int l;        
+        int a;        
     };
-    struct instruction pcode[pcode_length]; /* store pcode array */
+    struct instruction pcode[pcode_length];
 
 	void init();
-	void table_add(enum object item);
+	void table_add(enum object item, int type_id, int size);
 	void set_address(int n);
 	void gen(enum fct x, int y, int z);
     void display_table();
     void display_pcode();
     void interpret();
-    int base(int l, int* s, int b);
+	void reset();
 %}
 
 %union{
@@ -95,7 +97,7 @@
 %token <number> NUMBER
 %token <ident> IDENT 
 
-%type <number> type var pcode_register for_exp1 for_exp2 for_exp3
+%type <number> type var pcode_register table_register for_exp1 for_exp2 for_exp3
 
 %%
 
@@ -105,13 +107,20 @@ main_function
 	{
 		gen(jmp, 0, 0);
 	} 
+	def_function
 	MAIN
 	{
+		strcpy(function_name,"main");
+		strcpy(id, "main");
+		table_add(function, 0, 0);
+		table[table_pointer].adr = pcode_pointer;
 		pcode[$1].a = pcode_pointer;
-	}
+		reset();
+	} table_register
 	LB 
 	declaration_list
 	{
+		table[$6].size = var_size;
 		set_address(var_cnt);
 		gen(ini, 0 ,var_size+3);
 	}
@@ -121,12 +130,46 @@ main_function
 	}
 	;
 
+def_function
+	: type IDENT LP 
+	{
+		strcpy(function_name,$2);
+		strcpy(id, $2);
+		table_add(function, $1, 0);
+		table[table_pointer].adr = pcode_pointer;
+		reset();
+	}table_register paremeter RP
+	LB declaration_list
+	{
+		table[$5].size = var_size;
+		set_address(var_cnt);
+		gen(ini, 0 ,var_size+3);
+	} statement_list return_stat
+	RB def_function
+	| 
+	;
+
+paremeter
+	:
+	;
+
+return_stat
+	:
+	;
 
 pcode_register
 	:
 	{
 		$$ = pcode_pointer;
 	}
+	;
+
+table_register
+	:
+	{
+		$$ = table_pointer;
+	}
+	;
 
 declaration_list
 	: declaration_list declaration_stat 
@@ -140,28 +183,21 @@ declaration_stat
 		var_size++;
 		var_cnt++;
 		strcpy(id, $2);
-		table_add(variable);
-		if($1 == 1) table[table_pointer].X0_type = X0_int;
-		else if($1 == 2)table[table_pointer].X0_type = X0_char;
-		else if($1 == 3)table[table_pointer].X0_type = X0_bool;
+		table_add(variable, $1, 1);
 	}
     | type IDENT LSB NUMBER RSB SEMI
 	{
 		var_cnt++;
 		var_size += $4;
 		strcpy(id, $2);
-		table_add(array);
-		table[table_pointer].size = $4;
-		if($1 == 1) table[table_pointer].X0_type = X0_int;
-		else if($1 == 2)table[table_pointer].X0_type = X0_char;
-		else if($1 == 3)table[table_pointer].X0_type = X0_bool;
+		table_add(array, $1, $4);
 	}
     ;
 
 type
-	: INT {$$ = 1;}
-    | CHAR {$$ = 2;}
-	| BOOL {$$ = 3;}
+	: INT {$$ = 0;}
+    | CHAR {$$ = 1;}
+	| BOOL {$$ = 2;}
     ;
 
 var	
@@ -417,20 +453,25 @@ factor
 %%
 
 void yyerror(const char *s){
-	//err++;
-    printf("error!:%s\n, located at %d line\n", s, line);
+	err++;
+    printf("error!:%s, located at %d line\n", s, line);
 }
 
 void init()
 {
 	table_pointer = 0;
 	pcode_pointer = 0;
-	lev = 0;
 	err = 0;
 	var_cnt = 0;
 	var_size = 0;
 	is_write = false;
 	is_array_element = false;
+}
+
+void reset()
+{
+	var_cnt = 0;
+	var_size = 0;
 }
 
 int position(char* a)
@@ -442,21 +483,15 @@ int position(char* a)
     return i;
 }
 
-void table_add(enum object item)
+void table_add(enum object item, int type_id, int size)
 {
+	enum xtype map[3] = {X0_int, X0_char, X0_char};
 	table_pointer++;
 	strcpy(table[table_pointer].name, id);
+	strcpy(table[table_pointer].master, function_name);
 	table[table_pointer].kind = item;
-	switch(item)
-	{
-		case variable:
-			table[table_pointer].size = 1;
-			break;
-		case array:
-			break;
-		case function:
-			break;
-	}
+	table[table_pointer].size = size;
+	table[table_pointer].X0_type = map[type_id];
 }
 
 void set_address(int n)
@@ -466,6 +501,7 @@ void set_address(int n)
 	for(i = 1;i <= n;i++)
 	{
 		idx = table_pointer - i + 1;
+		if(table[idx].kind == function) continue;
 		tar -= table[idx].size;
 		table[idx].adr = tar;
 	}
@@ -507,32 +543,19 @@ void display_pcode()
 void display_table()
 {
 	int i;
-	char map[][5] = {{"int "},{"char"},{"bool"}};
-    printf("num    name    kind      address  size\n");
+	char m1[][5] = {{"int "},{"char"},{"bool"}};
+	char m2[][10] = {{"variable"},{"  array "},{"function"}};
+    printf("num    name       kind       type     master   address   size\n");
+	
 	for (i = 1; i <= table_pointer; i++)
 	{   
-		switch (table[i].kind)
+		if(table[i].kind == function && i > 1)
 		{
-			case variable:
-				printf("%3d     %s     var:%s     %3d    %3d\n",i,table[i].name,map[table[i].X0_type],table[i].adr,table[i].size);
-				fprintf(ftable, "%3d     %s     var:%s     %3d    %3d\n",i,table[i].name,map[table[i].X0_type],table[i].adr,table[i].size);
-				break;
-
-			case array:
-				printf("%3d     %s     ary:%s     %3d    %3d\n",i,table[i].name,map[table[i].X0_type],table[i].adr,table[i].size);
-				fprintf(ftable, "%3d     %s     ary:%s     %3d    %3d\n",i,table[i].name,map[table[i].X0_type],table[i].adr,table[i].size);
-				break;
-
-			case function:
-				/*
-				printf("    %d proc  %s ", i, table[i].name);
-				printf("lev=%d addr=%d size=%d\n", table[i].level, table[i].adr, table[i].size);
-
-				fprintf(ftable,"    %d proc  %s ", i, table[i].name);
-				fprintf(ftable,"lev=%d addr=%d size=%d\n", table[i].level, table[i].adr, table[i].size);
-				*/
-				break;
+			printf("\n",table[i].name);
+			fprintf(ftable,"\n",table[i].name);
 		}
+		printf("%2d     %4s     %s     %s     %4s      %3d      %3d\n",i,table[i].name,m2[table[i].kind],m1[table[i].X0_type],table[i].master,table[i].adr,table[i].size);
+		fprintf(ftable,"%2d     %4s     %s     %s     %4s      %3d      %3d\n",i,table[i].name,m2[table[i].kind],m1[table[i].X0_type],table[i].master,table[i].adr,table[i].size);
 	}
 	printf("\n");
 	fprintf(ftable, "\n");
@@ -549,77 +572,77 @@ void interpret()
 	printf("Start X0\n");
 	fprintf(fout,"Start X0\n");
 	s[0] = 0; /* s[0]不用 */
-	s[1] = 0; /* 主程序的三个联系单元均置为0 */
-	s[2] = 0;
-	s[3] = 0;
+	s[1] = 0; /* SL */
+	s[2] = 0; /* DL */
+	s[3] = 0; /* RA */
 	do {
-	    i = pcode[p];	/* 读当前指令 */
+	    i = pcode[p];	
 		p = p + 1;      
 		switch (i.f)
 		{
 			case pop:
 				t = t - i.a;
 				break;
-			case lit:	/* 将常量a的值取到栈顶 */
+			case lit:	
 				t = t + 1;
 				s[t] = i.a;				
 				break;
-			case opr:	/* 数学、逻辑运算 */
+			case opr:	
 				switch (i.a)
 				{
-					case 0:  /* 函数调用结束后返回 */
-						printf("EDNt = %d\n",t);
+					case 0:  
+						printf("EndT = %d\n",t);
 						t = b - 1;
 						p = s[t + 3];
 						b = s[t + 2];
 						break;
-					case 1: /* 栈顶元素取反 */
+					case 1:
 						s[t] = - s[t];
 						break;
-					case 2: /* 次栈顶项加上栈顶项，退两个栈元素，相加值进栈 */
+					case 2: 
 						t = t - 1;
 						s[t] = s[t] + s[t + 1];
 						break;
-					case 3:/* 次栈顶项减去栈顶项 */
+					case 3:
 						t = t - 1;
 						s[t] = s[t] - s[t + 1];
 						break;
-					case 4:/* 次栈顶项乘以栈顶项 */
+					case 4:
 						t = t - 1;
 						s[t] = s[t] * s[t + 1];
 						break;
-					case 5:/* 次栈顶项除以栈顶项 */
+					case 5:
 						t = t - 1;
 						s[t] = s[t] / s[t + 1];
 						break;
-					case 6:/* 栈顶元素的奇偶判断 */
+					case 6:
 						s[t] = s[t] % 2;
 						break;
-					case 8:/* 次栈顶项与栈顶项是否相等 */
+					case 8:
 						t = t - 1;
 						s[t] = (s[t] == s[t + 1]);
 						break;
-					case 9:/* 次栈顶项与栈顶项是否不等 */
+					case 9:
 						t = t - 1;
 						s[t] = (s[t] != s[t + 1]);
 						break;
-					case 10:/* 次栈顶项是否小于栈顶项 */
+					case 10:
 						t = t - 1;
 						s[t] = (s[t] < s[t + 1]);
 						break;
-					case 11:/* 次栈顶项是否大于等于栈顶项 */
+					case 11:
 						t = t - 1;
 						s[t] = (s[t] >= s[t + 1]);
 						break;
-					case 12:/* 次栈顶项是否大于栈顶项 */
+					case 12:
 						t = t - 1;
 						s[t] = (s[t] > s[t + 1]);
 						break;
-					case 13: /* 次栈顶项是否小于等于栈顶项 */
+					case 13: 
 						t = t - 1;
 						s[t] = (s[t] <= s[t + 1]);
 						break;
-					case 14:/* 栈顶值输出 */
+					case 14:
 						if(i.l == 0)
 						{
 							printf("%d", s[t]);
@@ -636,11 +659,11 @@ void interpret()
 							fprintf(fout,"%s",(s[t]==0)?"false":"true");
 						}
 						break;
-					case 15:/* 输出换行符 */
+					case 15:
 						printf("\n");
 						fprintf(fout,"\n");
 						break;
-					case 16:/* 读入一个输入置于栈顶 */
+					case 16:
 						t = t + 1;
 						printf("?");
 						fprintf(fout, "?");
@@ -680,43 +703,36 @@ void interpret()
 					case 20:
 						s[t] = s[t]%2;
 						break;
-					case 21:
-						s[t]++;
-						break;
-					case 22:
-						s[t]--;
-						break;
 				}
 				break;
-			case lod:	/* 取相对当前过程的数据基地址为a的内存的值到栈顶 */
+			case lod:	
 				t = t + 1;
-				s[t] = s[i.a+1];	
+				s[t] = s[i.a+b];	
 				break;
-			case sto:	/* 栈顶的值存到相对当前过程的数据基地址为a的内存 */
-				s[1+i.a] = s[t];
+			case sto:	
+				s[b+i.a] = s[t];
 				break;
 			case ast:
 				t = t - 1;
-				s[s[t]+1] = s[t+1];
+				s[s[t]+b] = s[t+1];
 				break;
 			case ald:
-				s[t] = s[s[t]+1];
+				s[t] = s[s[t]+b];
 				break;
 			case cal:	/* 调用子过程 */
-				s[t + 1] = base(i.l, s, b);	/* 将父过程基地址入栈，即建立静态链 */
 				s[t + 2] = b;	/* 将本过程基地址入栈，即建立动态链 */
 				s[t + 3] = p;	/* 将当前指令指针入栈，即保存返回地址 */
 				b = t + 1;	/* 改变基地址指针值为新过程的基地址 */
 				p = i.a;	/* 跳转 */
 				break;
-			case ini:	/* 在数据栈中为被调用的过程开辟a个单元的数据区 */
+			case ini:	
 				t = t + i.a;	
-				printf("STAt = %d\n",t);
+				printf("StaT = %d\n",t);
 				break;
-			case jmp:	/* 直接跳转 */
+			case jmp:	
 				p = i.a;
 				break;
-			case jpc:	/* 条件跳转 */
+			case jpc:	
 				if (s[t] == 0) 
 					p = i.a;
 				t = t - 1;
@@ -727,22 +743,10 @@ void interpret()
 	fprintf(fout,"End X0\n");
 }
 
-int base(int l, int* s, int b)
-{
-	int b1;
-	b1 = b;
-	while (l > 0)
-	{
-		b1 = s[b1];
-		l--;
-	}
-	return b1;
-}
 
 int main(){
-    printf("Input file  ");
 	strcpy(fname,"test.txt");
-    scanf("%s", fname);
+    //scanf("%s", fname);
     if((fin = fopen(fname, "r")) == NULL)
     {
         printf("open file error!\n");
