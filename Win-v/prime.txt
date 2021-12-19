@@ -1,0 +1,26 @@
+main
+{
+    int n;
+    int i;
+    int j;
+    int flag;
+
+    read n;
+    i = 2;
+    while(i <= n)
+    {
+        flag = 1;
+        j = 2;
+        while(j != i)
+        {
+            if(i%j == 0)
+            {
+                flag = 0;
+            }
+            j = j+1;
+        }
+        if(flag == 1) write i;
+        i = i + 1;
+    }
+    
+}
