@@ -1,9 +1,0 @@
-main{
-	bool a[5];
-	a[0] = 1;
-	a[1] = 0;
-	a[2] = true;
-	a[3] = false;
-	a[4] = 1;
-	write a[a[2]]|a[3]^a[0]&a[1];
-}

@@ -27,7 +27,8 @@
 	int line;
 	bool is_write;
 	bool is_return;
-	
+	bool has_return;
+	int pidx;
     FILE* fin = NULL;    
     FILE* ftable = NULL; 
     FILE* fpcode = NULL; 
@@ -55,7 +56,8 @@
         char name[var_name_length]; 
         enum object kind;           
         int adr;                   
-        int size;                   
+        int size;
+		int count;                   
 		enum xtype X0_type;
 		char master[var_name_length];
     };
@@ -94,14 +96,14 @@
     char* ident;
 }
 
-%token PLUS DIV MINUS MUL EQL GEQ LEQ LSS GTR NEQ CHAR INT BOOL PER XOR OR AND NOT ODD
+%token PLUS DIV MINUS MUL EQL GEQ LEQ LSS GTR NEQ CHAR INT BOOL PER XOR OR AND NOT ODD COMMA
 %token LP RP LB RB LSB RSB MAIN SEMI IF ELSE READ WRITE WHILE BECOMES TRUE FALSE FOR RETURN 
  
 
 %token <number> NUMBER
 %token <ident> IDENT 
 
-%type <number> type var pcode_register table_register for_exp1 for_exp2 for_exp3
+%type <number> type var pcode_register table_register for_exp1 for_exp2 for_exp3 parameters
 
 %%
 
@@ -125,6 +127,7 @@ main_function
 	declaration_list
 	{
 		table[$6].size = var_size;
+		table[$6].count = var_cnt;
 		set_address(var_cnt);
 		gen(ini, 0 ,var_size+3);
 	}
@@ -142,26 +145,72 @@ def_function
 		table_add(function, $1, 0);
 		table[table_pointer].adr = pcode_pointer;
 		reset();
-	}table_register paremeter RP
+	}table_register parameters RP
 	LB declaration_list
 	{
 		table[$5].size = var_size;
+		table[$5].count = var_cnt;
 		set_address(var_cnt);
 		gen(ini, 0 ,var_size+3);
 	} statement_list
-	RB def_function
+	RB 
+	{
+		if(has_return == false)
+		{
+			gen(opr, 1 , 0);
+		}
+	}def_function
 	| 
 	;
 
-paremeter
-	:
+parameters
+	: type IDENT 
+	{
+		var_size++;
+		var_cnt++;
+		strcpy(id, $2);
+		table_add(variable, $1, 1);
+	} parameter
+	| {}
 	;
 
+parameter
+	: COMMA type IDENT 
+	{
+		var_size++;
+		var_cnt++;
+		strcpy(id, $3);
+		table_add(variable, $2, 1);
+	} parameter
+	|
+	;
+
+call_parameters
+	: expression 
+	{
+		gen(sto, 1, pidx);
+		gen(pop, 0 , 1);
+		pidx++;
+	} call_parameter
+	| {}
+	;
+
+call_parameter
+	: COMMA expression 
+	{
+		gen(sto, 1, pidx);
+		gen(pop, 0 , 1);
+		pidx++;
+	}call_parameter
+	| {}
+	;
+	    
 return_stat
 	: RETURN
 	{
 		if(strcmp(function_name,"main") == 0) yyerror("can't use return in main function");
 		is_return = true;
+		has_return = true;
 	} expression_stat
 	;
 
@@ -216,6 +265,7 @@ var
 		if(table[$$].kind == function) yyerror("can't use function directly");
 		xt = table[$$].X0_type;
 		Kind = table[$$].kind;
+		printf("%s: %d",$1,Kind);
 	}
     | IDENT LSB expression RSB
 	{
@@ -227,13 +277,18 @@ var
 		gen(lit, 0, table[$$].adr);
 		gen(opr, 0, 2);
 	}
-	| IDENT LP paremeter RP 
+	| IDENT 
+	{
+		pidx = 3;
+	}LP call_parameters RP 
 	{
 		$$ = position_fun($1);
 		if(table[$$].kind != function) myerror("%s is not a function",$1);
 		Kind = table[$$].kind;
+		has_return = false;
 		gen(cal, 0, table[$$].adr);
 	}
+
     ;
 
 statement_list
@@ -334,7 +389,7 @@ read_stat
 	: READ var SEMI
 	{
 		gen(opr, xt, 16);
-		if(Kind = array) gen(ast, 0, 0);
+		if(Kind == array) gen(ast, 0, 0);
 		else if(Kind == variable) gen(sto, 0, table[$2].adr);
 		else yyerror("can't read a function");
 		gen(pop, 0 ,1);
@@ -501,6 +556,7 @@ void init()
 	var_size = 0;
 	is_write = false;
 	is_return = false;
+	has_return = false;
 	line = 1;
 }
 
@@ -533,7 +589,7 @@ int position_fun(char* a)
 
 void table_add(enum object item, int type_id, int size)
 {
-	enum xtype map[3] = {X0_int, X0_char, X0_char};
+	enum xtype map[3] = {X0_int, X0_char, X0_bool};
 	table_pointer++;
 	strcpy(table[table_pointer].name, id);
 	strcpy(table[table_pointer].master, function_name);
@@ -638,7 +694,6 @@ void interpret()
 				switch (i.a)
 				{
 					case 0:  
-						printf("EndT = %d\n",t);
 						t = b - 1;
 						p = s[t + 3];
 						b = s[t + 2];
@@ -758,7 +813,8 @@ void interpret()
 				s[t] = s[i.a+b];	
 				break;
 			case sto:	
-				s[b+i.a] = s[t];
+				if(i.l == 0) s[b+i.a] = s[t];
+				else if(i.l == 1) s[t+i.a] = s[t];
 				break;
 			case stv:
 				s[b] = s[t];
@@ -766,11 +822,13 @@ void interpret()
 			case ast:
 				t = t - 1;
 				s[s[t]+b] = s[t+1];
+				s[t] = s[t+1];
 				break;
 			case ald:
 				s[t] = s[s[t]+b];
 				break;
 			case cal:	        /* 调用子过程 */
+				s[t + 1] = 0;
 				s[t + 2] = b;	/* 将本过程基地址入栈，即建立动态链 */
 				s[t + 3] = p;	/* 将当前指令指针入栈，即保存返回地址 */
 				b = t + 1;	    /* 改变基地址指针值为新过程的基地址 */
@@ -778,7 +836,6 @@ void interpret()
 				break;
 			case ini:	
 				t = t + i.a;	
-				printf("StaT = %d\n",t);
 				break;
 			case jmp:	
 				p = i.a;
@@ -797,7 +854,7 @@ void interpret()
 
 int main(){
 	strcpy(fname,"test.txt");
-    //scanf("%s", fname);
+    scanf("%s", fname);
     if((fin = fopen(fname, "r")) == NULL)
     {
         printf("open file error!\n");

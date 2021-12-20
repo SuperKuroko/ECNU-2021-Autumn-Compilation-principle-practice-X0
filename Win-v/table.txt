@@ -1,11 +1,5 @@
- 1        f     function     int         f        1        2
- 2        a     variable     int         f        3        1
- 3        b     variable     int         f        4        1
-
- 4        k     function     int         k       22        2
- 5        x     variable     int         k        3        1
- 6        y     variable     int         k        4        1
-
- 7     main     function     int      main       39        1
- 8        c     variable     int      main        3        1
+ 1     main     function     int      main        1      102
+ 2        n     variable     int      main        3        1
+ 3        i     variable     int      main        4        1
+ 4        a       array      int      main        5      100
 

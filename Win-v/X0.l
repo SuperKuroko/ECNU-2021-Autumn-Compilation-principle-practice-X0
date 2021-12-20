@@ -48,6 +48,7 @@
 "!"  {return NOT;}
 "^"  {return XOR;}
 "|"  {return OR;}
+","  {return COMMA;}
 
 "!=" {return NEQ;}
 ">=" {return GEQ;}
