@@ -18,7 +18,6 @@ extern "C" {
 #endif
 Widget::Widget(QWidget *parent): QWidget(parent)
 {
-    X0_Compiler("prime.txt");
     setFixedSize(2500,1600);
     setWindowTitle("Lex-Yacc");
     InitMenuBar();
