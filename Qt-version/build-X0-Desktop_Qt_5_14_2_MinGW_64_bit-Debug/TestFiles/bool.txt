@@ -1,0 +1,14 @@
+main{
+	bool a;
+	bool b;
+	int c;
+	
+	a = false;
+	b = 100;
+	write a;
+	write b;
+	write a^b;
+	write a|b;
+	write !a;
+	write a&b;
+}

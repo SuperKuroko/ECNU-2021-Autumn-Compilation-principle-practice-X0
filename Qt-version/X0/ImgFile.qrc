@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/IMG">
+        <file>img/NewFile.jpeg</file>
+        <file>img/OpenFile.jpeg</file>
+        <file>img/OpenFile2.jpeg</file>
+        <file>img/Paste.jpeg</file>
+        <file>img/SaveAs.jpeg</file>
+        <file>img/SaveFile.jpeg</file>
+        <file>img/NewFile2.jpeg</file>
+        <file>img/CloseFile.jpeg</file>
+        <file>img/Exit.jpeg</file>
+    </qresource>
+</RCC>
