@@ -15,6 +15,7 @@
 	int table_pointer;
     int pcode_pointer;
     int lev;
+	char bug[100];
 	char fname[20];
     char id[var_name_length];
 	char function_name[var_name_length];
@@ -25,7 +26,7 @@
 	int var_size;
 	int line;
 	bool is_write;
-	bool is_array_element;
+	bool is_return;
 	
     FILE* fin = NULL;    
     FILE* ftable = NULL; 
@@ -39,6 +40,7 @@
 		array,
         function
     };
+	enum object Kind;
 
 	enum xtype
 	{
@@ -64,7 +66,7 @@
         lit,     opr,     lod, 
         sto,     cal,     ini, 
         jmp,     jpc,     pop,
-		ast,     ald,
+		ast,     ald,     stv,
     };
 
     struct instruction
@@ -83,6 +85,8 @@
     void display_pcode();
     void interpret();
 	void reset();
+	void myerror();
+	int position_fun(char* a);
 %}
 
 %union{
@@ -91,7 +95,7 @@
 }
 
 %token PLUS DIV MINUS MUL EQL GEQ LEQ LSS GTR NEQ CHAR INT BOOL PER XOR OR AND NOT ODD
-%token LP RP LB RB LSB RSB MAIN SEMI IF ELSE READ WRITE WHILE BECOMES TRUE FALSE FOR
+%token LP RP LB RB LSB RSB MAIN SEMI IF ELSE READ WRITE WHILE BECOMES TRUE FALSE FOR RETURN 
  
 
 %token <number> NUMBER
@@ -144,7 +148,7 @@ def_function
 		table[$5].size = var_size;
 		set_address(var_cnt);
 		gen(ini, 0 ,var_size+3);
-	} statement_list return_stat
+	} statement_list
 	RB def_function
 	| 
 	;
@@ -154,7 +158,11 @@ paremeter
 	;
 
 return_stat
-	:
+	: RETURN
+	{
+		if(strcmp(function_name,"main") == 0) yyerror("can't use return in main function");
+		is_return = true;
+	} expression_stat
 	;
 
 pcode_register
@@ -204,16 +212,27 @@ var
 	: IDENT 
 	{
 		$$ = position($1);
+		if(table[$$].kind == array) yyerror("can't use array directly");
+		if(table[$$].kind == function) yyerror("can't use function directly");
 		xt = table[$$].X0_type;
-		is_array_element = false;
+		Kind = table[$$].kind;
 	}
     | IDENT LSB expression RSB
 	{
 		$$ = position($1);
+		if(table[$$].kind == variable) yyerror("can't use variable with []");
+		if(table[$$].kind == function) yyerror("can't use function with []");
 		xt = table[$$].X0_type;
-		is_array_element = true;
+		Kind = table[$$].kind;
 		gen(lit, 0, table[$$].adr);
 		gen(opr, 0, 2);
+	}
+	| IDENT LP paremeter RP 
+	{
+		$$ = position_fun($1);
+		if(table[$$].kind != function) myerror("%s is not a function",$1);
+		Kind = table[$$].kind;
+		gen(cal, 0, table[$$].adr);
 	}
     ;
 
@@ -230,6 +249,7 @@ statement
     | compound_stat 
 	| for_stat
     | expression_stat
+	| return_stat
 	| SEMI
     ;
 
@@ -242,7 +262,6 @@ if_stat
 	{
 		gen(jmp, 0, 0);
 		pcode[$5].a = pcode_pointer;
-
 	}
 	else_stat
 	{
@@ -315,8 +334,9 @@ read_stat
 	: READ var SEMI
 	{
 		gen(opr, xt, 16);
-		if(is_array_element) gen(ast, 0, 0);
-		else gen(sto, 0, table[$2].adr);
+		if(Kind = array) gen(ast, 0, 0);
+		else if(Kind == variable) gen(sto, 0, table[$2].adr);
+		else yyerror("can't read a function");
 		gen(pop, 0 ,1);
 	}
     ;
@@ -334,6 +354,13 @@ expression_stat
 			gen(opr, 0, 15);
 			is_write = false;
 		}
+		if(is_return)
+		{
+			gen(stv, 0, 0);
+			gen(opr, 1, 0);
+			Kind = function;
+			is_return = false;
+		}
 		gen(pop, 0, 1);
 	}
     ;
@@ -341,8 +368,9 @@ expression_stat
 expression
 	: var BECOMES expression 
 	{
-		if(is_array_element) gen(ast, 0, 0);
-		else gen(sto, 0, table[$1].adr);
+		if(Kind == array) gen(ast, 0, 0);
+		else if (Kind == variable) gen(sto, 0, table[$1].adr);
+		else yyerror("can't allocate a value to a function");
 	}
     | simple_expr
     ;
@@ -433,8 +461,8 @@ factor
 	: LP expression RP 
     | var
 	{
-		if(is_array_element) gen(ald, 0 ,0);
-		else gen(lod, 0, table[$1].adr);
+		if(Kind == array) gen(ald, 0 ,0);
+		else if(Kind == variable) gen(lod, 0, table[$1].adr);
 	}
     | NUMBER
 	{
@@ -447,14 +475,21 @@ factor
 	| FALSE
 	{
 		gen(lit, 0, 0);
-	}
+	} 
     ;
 
 %%
 
 void yyerror(const char *s){
 	err++;
-    printf("error!:%s, located at %d line\n", s, line);
+	printf("error:%s! located at %d line\n", s, line);
+	fprintf(fmistake, "error:%s! located at %d line\n", s, line);
+}
+
+void myerror(const char *s, const char *a)
+{
+	sprintf(bug,s,a);
+	yyerror(bug);
 }
 
 void init()
@@ -465,7 +500,8 @@ void init()
 	var_cnt = 0;
 	var_size = 0;
 	is_write = false;
-	is_array_element = false;
+	is_return = false;
+	line = 1;
 }
 
 void reset()
@@ -478,8 +514,20 @@ int position(char* a)
 {
     int i;
     strcpy(table[0].name, a);
+	strcpy(table[0].master, function_name);
+    i = table_pointer;
+    while(strcmp(table[i].name, a) != 0 || strcmp(table[i].master,function_name)) --i;
+	if(i == 0) myerror("%s is not declared",a);
+    return i;
+}
+
+int position_fun(char* a)
+{
+    int i;
+    strcpy(table[0].name, a);
     i = table_pointer;
     while(strcmp(table[i].name, a) != 0) --i;
+	if(i == 0) myerror("%s function is not declared",a);
     return i;
 }
 
@@ -501,7 +549,6 @@ void set_address(int n)
 	for(i = 1;i <= n;i++)
 	{
 		idx = table_pointer - i + 1;
-		if(table[idx].kind == function) continue;
 		tar -= table[idx].size;
 		table[idx].adr = tar;
 	}
@@ -530,7 +577,7 @@ void display_pcode()
 	int i;
 	char name[][5]=
 	{
-		{"lit"},{"opr"},{"lod"},{"sto"},{"cal"},{"ini"},{"jmp"},{"jpc"},{"pop"},{"ast"},{"ald"}
+		{"lit"},{"opr"},{"lod"},{"sto"},{"cal"},{"ini"},{"jmp"},{"jpc"},{"pop"},{"ast"},{"ald"},{"stv"}
 	};
 	
     for (i = 0; i < pcode_pointer; i++)
@@ -595,6 +642,7 @@ void interpret()
 						t = b - 1;
 						p = s[t + 3];
 						b = s[t + 2];
+						t += i.l;
 						break;
 					case 1:
 						s[t] = - s[t];
@@ -712,6 +760,9 @@ void interpret()
 			case sto:	
 				s[b+i.a] = s[t];
 				break;
+			case stv:
+				s[b] = s[t];
+				break;
 			case ast:
 				t = t - 1;
 				s[s[t]+b] = s[t+1];
@@ -719,11 +770,11 @@ void interpret()
 			case ald:
 				s[t] = s[s[t]+b];
 				break;
-			case cal:	/* 调用子过程 */
+			case cal:	        /* 调用子过程 */
 				s[t + 2] = b;	/* 将本过程基地址入栈，即建立动态链 */
 				s[t + 3] = p;	/* 将当前指令指针入栈，即保存返回地址 */
-				b = t + 1;	/* 改变基地址指针值为新过程的基地址 */
-				p = i.a;	/* 跳转 */
+				b = t + 1;	    /* 改变基地址指针值为新过程的基地址 */
+				p = i.a;	    /* 跳转 */
 				break;
 			case ini:	
 				t = t + i.a;	

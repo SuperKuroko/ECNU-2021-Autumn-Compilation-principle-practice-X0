@@ -5,6 +5,7 @@ int f()
   a = 2+3;
   b = 1+5;
   write a*b;
+  return 5;
 }
 
 
@@ -14,12 +15,10 @@ int k()
   int y;
   x = 2+7;
   y = 2-8;  
-  write x+y;
+  return x*y;
 }
 
 main
 {
-  int c;
-  int a[10];
-  bool c[100];
+  
 }

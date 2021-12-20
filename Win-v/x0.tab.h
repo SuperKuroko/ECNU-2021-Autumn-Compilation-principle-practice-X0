@@ -38,8 +38,9 @@ typedef union{
 #define	TRUE	290
 #define	FALSE	291
 #define	FOR	292
-#define	NUMBER	293
-#define	IDENT	294
+#define	RETURN	293
+#define	NUMBER	294
+#define	IDENT	295
 
 
 extern YYSTYPE yylval;

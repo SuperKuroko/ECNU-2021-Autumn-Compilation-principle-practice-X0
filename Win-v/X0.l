@@ -1,7 +1,7 @@
 %{
     #include <stdio.h>
     #include "x0.tab.h"
-    int line;
+    int line = 1;
     void yyerror(char*);
     int yywrap(void);
     void redirectInput(FILE *input);
@@ -11,25 +11,26 @@
 
 
 %%
-[\n]    {++line;}
-[\t]	{;}
-"main"  {return MAIN;}
-"int"   {return INT;}
-"char"  {return CHAR;}
-"bool"  {return BOOL;}
-"if"    {return IF;}
-"else"  {return ELSE;}
-"write" {return WRITE;}
-"read"  {return READ;}
-"while" {return WHILE;}
-"true"  {return TRUE;}
-"false" {return FALSE;}
-"and"   {return AND;}
-"not"   {return NOT;}
-"xor"   {return XOR;}
-"or"    {return OR;}
-"odd"   {return ODD;}
-"for"   {return FOR;}
+[\n]     {++line;}
+[\t]	 {;}
+"main"   {return MAIN;}
+"int"    {return INT;}
+"char"   {return CHAR;}
+"bool"   {return BOOL;}
+"if"     {return IF;}
+"else"   {return ELSE;}
+"write"  {return WRITE;}
+"read"   {return READ;}
+"while"  {return WHILE;}
+"true"   {return TRUE;}
+"false"  {return FALSE;}
+"and"    {return AND;}
+"not"    {return NOT;}
+"xor"    {return XOR;}
+"or"     {return OR;}
+"odd"    {return ODD;}
+"for"    {return FOR;}
+"return" {return RETURN;}
  
 "="  {return BECOMES;}
 "+"  {return PLUS;}
