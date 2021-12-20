@@ -15,8 +15,10 @@
 	int table_pointer;
     int pcode_pointer;
     int lev;
+	char bug[100];
 	char fname[20];
     char id[var_name_length];
+	char function_name[var_name_length];
     int num;
 	int array_size;
 	int err;
@@ -24,13 +26,14 @@
 	int var_size;
 	int line;
 	bool is_write;
-	bool is_array_element;
-	
-    FILE* fin = NULL;     /* input file */
-    FILE* ftable = NULL;  /* the file which store the table output */
-    FILE* fpcode = NULL;  /* the file which store the pcode output */
-    FILE* fout = NULL;    /* output file */
-    FILE* fmistake = NULL;  /* the file which store the error infomation (if had) */
+	bool is_return;
+	bool has_return;
+	int pidx;
+    FILE* fin = NULL;    
+    FILE* ftable = NULL; 
+    FILE* fpcode = NULL; 
+    FILE* fout = NULL;    
+    FILE* fmistake = NULL;  
 
     enum object 
 	{
@@ -38,6 +41,7 @@
 		array,
         function
     };
+	enum object Kind;
 
 	enum xtype
 	{
@@ -46,41 +50,45 @@
 		X0_bool
 	};
 	enum xtype xt;
+
     struct tablestruct
     {
-        char name[var_name_length]; /* char array to store the var name*/
-        enum object kind;           /* kind：const，var or procedure */
-        int adr;                    /* adr: for all except const var */
-        int size;                   /* size to alloc, only for procedure */
-		enum xtype X0_type;         /* only for var or const */
+        char name[var_name_length]; 
+        enum object kind;           
+        int adr;                   
+        int size;
+		int count;                   
+		enum xtype X0_type;
+		char master[var_name_length];
     };
-
     struct tablestruct table[table_length]; 
+
     enum fct 
     {
         lit,     opr,     lod, 
         sto,     cal,     ini, 
         jmp,     jpc,     pop,
-		ast,     ald,
+		ast,     ald,     stv,
     };
 
-    /* vitrual machine instruction struct */
     struct instruction
     {
-        enum fct f;   /* the type of instruction */
-        int l;        /* the diff between reference level and declaration level */
-        int a;        /* depend on the val of f */
+        enum fct f;   
+        int l;        
+        int a;        
     };
-    struct instruction pcode[pcode_length]; /* store pcode array */
+    struct instruction pcode[pcode_length];
 
 	void init();
-	void table_add(enum object item);
+	void table_add(enum object item, int type_id, int size);
 	void set_address(int n);
 	void gen(enum fct x, int y, int z);
     void display_table();
     void display_pcode();
     void interpret();
-    int base(int l, int* s, int b);
+	void reset();
+	void myerror();
+	int position_fun(char* a);
 %}
 
 %union{
@@ -88,30 +96,38 @@
     char* ident;
 }
 
-%token PLUS DIV MINUS MUL EQL GEQ LEQ LSS GTR NEQ CHAR INT BOOL PER XOR OR AND NOT ODD
-%token LP RP LB RB LSB RSB MAIN SEMI IF ELSE READ WRITE WHILE BECOMES TRUE FALSE FOR
+%token PLUS DIV MINUS MUL EQL GEQ LEQ LSS GTR NEQ CHAR INT BOOL PER XOR OR AND NOT ODD COMMA
+%token LP RP LB RB LSB RSB MAIN SEMI IF ELSE READ WRITE WHILE BECOMES TRUE FALSE FOR RETURN 
  
 
 %token <number> NUMBER
 %token <ident> IDENT 
 
-%type <number> type var pcode_register for_exp1 for_exp2 for_exp3
+%type <number> type var pcode_register table_register for_exp1 for_exp2 for_exp3 parameters
 
 %%
 
 main_function
-	: def_function
+	:
 	pcode_register
 	{
 		gen(jmp, 0, 0);
 	} 
+	def_function
 	MAIN
 	{
+		strcpy(function_name,"main");
+		strcpy(id, "main");
+		table_add(function, 0, 0);
+		table[table_pointer].adr = pcode_pointer;
 		pcode[$1].a = pcode_pointer;
-	}
+		reset();
+	} table_register
 	LB 
 	declaration_list
 	{
+		table[$6].size = var_size;
+		table[$6].count = var_cnt;
 		set_address(var_cnt);
 		gen(ini, 0 ,var_size+3);
 	}
@@ -122,18 +138,80 @@ main_function
 	;
 
 def_function
-	: type IDENT LP paremeter RP
-	LB declaration_list statement_list return_stat
-	RB def_function
+	: type IDENT LP 
+	{
+		strcpy(function_name,$2);
+		strcpy(id, $2);
+		table_add(function, $1, 0);
+		table[table_pointer].adr = pcode_pointer;
+		reset();
+	}table_register parameters RP
+	LB declaration_list
+	{
+		table[$5].size = var_size;
+		table[$5].count = var_cnt;
+		set_address(var_cnt);
+		gen(ini, 0 ,var_size+3);
+	} statement_list
+	RB 
+	{
+		if(has_return == false)
+		{
+			gen(opr, 1 , 0);
+		}
+	}def_function
+	| 
+	;
+
+parameters
+	: type IDENT 
+	{
+		var_size++;
+		var_cnt++;
+		strcpy(id, $2);
+		table_add(variable, $1, 1);
+	} parameter
+	| {}
+	;
+
+parameter
+	: COMMA type IDENT 
+	{
+		var_size++;
+		var_cnt++;
+		strcpy(id, $3);
+		table_add(variable, $2, 1);
+	} parameter
 	|
 	;
 
-paremeter
-	:
+call_parameters
+	: expression 
+	{
+		gen(sto, 1, pidx);
+		gen(pop, 0 , 1);
+		pidx++;
+	} call_parameter
+	| {}
 	;
 
+call_parameter
+	: COMMA expression 
+	{
+		gen(sto, 1, pidx);
+		gen(pop, 0 , 1);
+		pidx++;
+	}call_parameter
+	| {}
+	;
+	    
 return_stat
-	:
+	: RETURN
+	{
+		if(strcmp(function_name,"main") == 0) yyerror("can't use return in main function");
+		is_return = true;
+		has_return = true;
+	} expression_stat
 	;
 
 pcode_register
@@ -141,6 +219,14 @@ pcode_register
 	{
 		$$ = pcode_pointer;
 	}
+	;
+
+table_register
+	:
+	{
+		$$ = table_pointer;
+	}
+	;
 
 declaration_list
 	: declaration_list declaration_stat 
@@ -154,45 +240,55 @@ declaration_stat
 		var_size++;
 		var_cnt++;
 		strcpy(id, $2);
-		table_add(variable);
-		if($1 == 1) table[table_pointer].X0_type = X0_int;
-		else if($1 == 2)table[table_pointer].X0_type = X0_char;
-		else if($1 == 3)table[table_pointer].X0_type = X0_bool;
+		table_add(variable, $1, 1);
 	}
     | type IDENT LSB NUMBER RSB SEMI
 	{
 		var_cnt++;
 		var_size += $4;
 		strcpy(id, $2);
-		table_add(array);
-		table[table_pointer].size = $4;
-		if($1 == 1) table[table_pointer].X0_type = X0_int;
-		else if($1 == 2)table[table_pointer].X0_type = X0_char;
-		else if($1 == 3)table[table_pointer].X0_type = X0_bool;
+		table_add(array, $1, $4);
 	}
     ;
 
 type
-	: INT {$$ = 1;}
-    | CHAR {$$ = 2;}
-	| BOOL {$$ = 3;}
+	: INT {$$ = 0;}
+    | CHAR {$$ = 1;}
+	| BOOL {$$ = 2;}
     ;
 
 var	
 	: IDENT 
 	{
 		$$ = position($1);
+		if(table[$$].kind == array) yyerror("can't use array directly");
+		if(table[$$].kind == function) yyerror("can't use function directly");
 		xt = table[$$].X0_type;
-		is_array_element = false;
+		Kind = table[$$].kind;
+		printf("%s: %d",$1,Kind);
 	}
     | IDENT LSB expression RSB
 	{
 		$$ = position($1);
+		if(table[$$].kind == variable) yyerror("can't use variable with []");
+		if(table[$$].kind == function) yyerror("can't use function with []");
 		xt = table[$$].X0_type;
-		is_array_element = true;
+		Kind = table[$$].kind;
 		gen(lit, 0, table[$$].adr);
 		gen(opr, 0, 2);
 	}
+	| IDENT 
+	{
+		pidx = 3;
+	}LP call_parameters RP 
+	{
+		$$ = position_fun($1);
+		if(table[$$].kind != function) myerror("%s is not a function",$1);
+		Kind = table[$$].kind;
+		has_return = false;
+		gen(cal, 0, table[$$].adr);
+	}
+
     ;
 
 statement_list
@@ -208,6 +304,7 @@ statement
     | compound_stat 
 	| for_stat
     | expression_stat
+	| return_stat
 	| SEMI
     ;
 
@@ -220,7 +317,6 @@ if_stat
 	{
 		gen(jmp, 0, 0);
 		pcode[$5].a = pcode_pointer;
-
 	}
 	else_stat
 	{
@@ -293,8 +389,9 @@ read_stat
 	: READ var SEMI
 	{
 		gen(opr, xt, 16);
-		if(is_array_element) gen(ast, 0, 0);
-		else gen(sto, 0, table[$2].adr);
+		if(Kind == array) gen(ast, 0, 0);
+		else if(Kind == variable) gen(sto, 0, table[$2].adr);
+		else yyerror("can't read a function");
 		gen(pop, 0 ,1);
 	}
     ;
@@ -312,6 +409,13 @@ expression_stat
 			gen(opr, 0, 15);
 			is_write = false;
 		}
+		if(is_return)
+		{
+			gen(stv, 0, 0);
+			gen(opr, 1, 0);
+			Kind = function;
+			is_return = false;
+		}
 		gen(pop, 0, 1);
 	}
     ;
@@ -319,8 +423,9 @@ expression_stat
 expression
 	: var BECOMES expression 
 	{
-		if(is_array_element) gen(ast, 0, 0);
-		else gen(sto, 0, table[$1].adr);
+		if(Kind == array) gen(ast, 0, 0);
+		else if (Kind == variable) gen(sto, 0, table[$1].adr);
+		else yyerror("can't allocate a value to a function");
 	}
     | simple_expr
     ;
@@ -411,8 +516,8 @@ factor
 	: LP expression RP 
     | var
 	{
-		if(is_array_element) gen(ald, 0 ,0);
-		else gen(lod, 0, table[$1].adr);
+		if(Kind == array) gen(ald, 0 ,0);
+		else if(Kind == variable) gen(lod, 0, table[$1].adr);
 	}
     | NUMBER
 	{
@@ -425,52 +530,72 @@ factor
 	| FALSE
 	{
 		gen(lit, 0, 0);
-	}
+	} 
     ;
 
 %%
 
 void yyerror(const char *s){
-	//err++;
-    printf("error!:%s\n, located at %d line\n", s, line);
+	err++;
+	printf("error:%s! located at %d line\n", s, line);
+	fprintf(fmistake, "error:%s! located at %d line\n", s, line);
+}
+
+void myerror(const char *s, const char *a)
+{
+	sprintf(bug,s,a);
+	yyerror(bug);
 }
 
 void init()
 {
 	table_pointer = 0;
 	pcode_pointer = 0;
-	lev = 0;
 	err = 0;
 	var_cnt = 0;
 	var_size = 0;
 	is_write = false;
-	is_array_element = false;
+	is_return = false;
+	has_return = false;
+	line = 1;
+}
+
+void reset()
+{
+	var_cnt = 0;
+	var_size = 0;
 }
 
 int position(char* a)
 {
     int i;
     strcpy(table[0].name, a);
+	strcpy(table[0].master, function_name);
     i = table_pointer;
-    while(strcmp(table[i].name, a) != 0) --i;
+    while(strcmp(table[i].name, a) != 0 || strcmp(table[i].master,function_name)) --i;
+	if(i == 0) myerror("%s is not declared",a);
     return i;
 }
 
-void table_add(enum object item)
+int position_fun(char* a)
 {
+    int i;
+    strcpy(table[0].name, a);
+    i = table_pointer;
+    while(strcmp(table[i].name, a) != 0) --i;
+	if(i == 0) myerror("%s function is not declared",a);
+    return i;
+}
+
+void table_add(enum object item, int type_id, int size)
+{
+	enum xtype map[3] = {X0_int, X0_char, X0_bool};
 	table_pointer++;
 	strcpy(table[table_pointer].name, id);
+	strcpy(table[table_pointer].master, function_name);
 	table[table_pointer].kind = item;
-	switch(item)
-	{
-		case variable:
-			table[table_pointer].size = 1;
-			break;
-		case array:
-			break;
-		case function:
-			break;
-	}
+	table[table_pointer].size = size;
+	table[table_pointer].X0_type = map[type_id];
 }
 
 void set_address(int n)
@@ -508,7 +633,7 @@ void display_pcode()
 	int i;
 	char name[][5]=
 	{
-		{"lit"},{"opr"},{"lod"},{"sto"},{"cal"},{"ini"},{"jmp"},{"jpc"},{"pop"},{"ast"},{"ald"}
+		{"lit"},{"opr"},{"lod"},{"sto"},{"cal"},{"ini"},{"jmp"},{"jpc"},{"pop"},{"ast"},{"ald"},{"stv"}
 	};
 	
     for (i = 0; i < pcode_pointer; i++)
@@ -521,32 +646,19 @@ void display_pcode()
 void display_table()
 {
 	int i;
-	char map[][5] = {{"int "},{"char"},{"bool"}};
-    printf("num    name    kind      address  size\n");
+	char m1[][5] = {{"int "},{"char"},{"bool"}};
+	char m2[][10] = {{"variable"},{"  array "},{"function"}};
+    printf("num    name       kind       type     master   address   size\n");
+	
 	for (i = 1; i <= table_pointer; i++)
 	{   
-		switch (table[i].kind)
+		if(table[i].kind == function && i > 1)
 		{
-			case variable:
-				printf("%3d     %s     var:%s     %3d    %3d\n",i,table[i].name,map[table[i].X0_type],table[i].adr,table[i].size);
-				fprintf(ftable, "%3d     %s     var:%s     %3d    %3d\n",i,table[i].name,map[table[i].X0_type],table[i].adr,table[i].size);
-				break;
-
-			case array:
-				printf("%3d     %s     ary:%s     %3d    %3d\n",i,table[i].name,map[table[i].X0_type],table[i].adr,table[i].size);
-				fprintf(ftable, "%3d     %s     ary:%s     %3d    %3d\n",i,table[i].name,map[table[i].X0_type],table[i].adr,table[i].size);
-				break;
-
-			case function:
-				/*
-				printf("    %d proc  %s ", i, table[i].name);
-				printf("lev=%d addr=%d size=%d\n", table[i].level, table[i].adr, table[i].size);
-
-				fprintf(ftable,"    %d proc  %s ", i, table[i].name);
-				fprintf(ftable,"lev=%d addr=%d size=%d\n", table[i].level, table[i].adr, table[i].size);
-				*/
-				break;
+			printf("\n",table[i].name);
+			fprintf(ftable,"\n",table[i].name);
 		}
+		printf("%2d     %4s     %s     %s     %4s      %3d      %3d\n",i,table[i].name,m2[table[i].kind],m1[table[i].X0_type],table[i].master,table[i].adr,table[i].size);
+		fprintf(ftable,"%2d     %4s     %s     %s     %4s      %3d      %3d\n",i,table[i].name,m2[table[i].kind],m1[table[i].X0_type],table[i].master,table[i].adr,table[i].size);
 	}
 	printf("\n");
 	fprintf(ftable, "\n");
@@ -563,77 +675,77 @@ void interpret()
 	printf("Start X0\n");
 	fprintf(fout,"Start X0\n");
 	s[0] = 0; /* s[0]不用 */
-	s[1] = 0; /* 主程序的三个联系单元均置为0 */
-	s[2] = 0;
-	s[3] = 0;
+	s[1] = 0; /* SL */
+	s[2] = 0; /* DL */
+	s[3] = 0; /* RA */
 	do {
-	    i = pcode[p];	/* 读当前指令 */
+	    i = pcode[p];	
 		p = p + 1;      
 		switch (i.f)
 		{
 			case pop:
 				t = t - i.a;
 				break;
-			case lit:	/* 将常量a的值取到栈顶 */
+			case lit:	
 				t = t + 1;
 				s[t] = i.a;				
 				break;
-			case opr:	/* 数学、逻辑运算 */
+			case opr:	
 				switch (i.a)
 				{
-					case 0:  /* 函数调用结束后返回 */
-						printf("EDNt = %d\n",t);
+					case 0:  
 						t = b - 1;
 						p = s[t + 3];
 						b = s[t + 2];
+						t += i.l;
 						break;
-					case 1: /* 栈顶元素取反 */
+					case 1:
 						s[t] = - s[t];
 						break;
-					case 2: /* 次栈顶项加上栈顶项，退两个栈元素，相加值进栈 */
+					case 2: 
 						t = t - 1;
 						s[t] = s[t] + s[t + 1];
 						break;
-					case 3:/* 次栈顶项减去栈顶项 */
+					case 3:
 						t = t - 1;
 						s[t] = s[t] - s[t + 1];
 						break;
-					case 4:/* 次栈顶项乘以栈顶项 */
+					case 4:
 						t = t - 1;
 						s[t] = s[t] * s[t + 1];
 						break;
-					case 5:/* 次栈顶项除以栈顶项 */
+					case 5:
 						t = t - 1;
 						s[t] = s[t] / s[t + 1];
 						break;
-					case 6:/* 栈顶元素的奇偶判断 */
+					case 6:
 						s[t] = s[t] % 2;
 						break;
-					case 8:/* 次栈顶项与栈顶项是否相等 */
+					case 8:
 						t = t - 1;
 						s[t] = (s[t] == s[t + 1]);
 						break;
-					case 9:/* 次栈顶项与栈顶项是否不等 */
+					case 9:
 						t = t - 1;
 						s[t] = (s[t] != s[t + 1]);
 						break;
-					case 10:/* 次栈顶项是否小于栈顶项 */
+					case 10:
 						t = t - 1;
 						s[t] = (s[t] < s[t + 1]);
 						break;
-					case 11:/* 次栈顶项是否大于等于栈顶项 */
+					case 11:
 						t = t - 1;
 						s[t] = (s[t] >= s[t + 1]);
 						break;
-					case 12:/* 次栈顶项是否大于栈顶项 */
+					case 12:
 						t = t - 1;
 						s[t] = (s[t] > s[t + 1]);
 						break;
-					case 13: /* 次栈顶项是否小于等于栈顶项 */
+					case 13: 
 						t = t - 1;
 						s[t] = (s[t] <= s[t + 1]);
 						break;
-					case 14:/* 栈顶值输出 */
+					case 14:
 						if(i.l == 0)
 						{
 							printf("%d", s[t]);
@@ -650,11 +762,11 @@ void interpret()
 							fprintf(fout,"%s",(s[t]==0)?"false":"true");
 						}
 						break;
-					case 15:/* 输出换行符 */
+					case 15:
 						printf("\n");
 						fprintf(fout,"\n");
 						break;
-					case 16:/* 读入一个输入置于栈顶 */
+					case 16:
 						t = t + 1;
 						printf("?");
 						fprintf(fout, "?");
@@ -694,43 +806,41 @@ void interpret()
 					case 20:
 						s[t] = s[t]%2;
 						break;
-					case 21:
-						s[t]++;
-						break;
-					case 22:
-						s[t]--;
-						break;
 				}
 				break;
-			case lod:	/* 取相对当前过程的数据基地址为a的内存的值到栈顶 */
+			case lod:	
 				t = t + 1;
-				s[t] = s[i.a+1];	
+				s[t] = s[i.a+b];	
 				break;
-			case sto:	/* 栈顶的值存到相对当前过程的数据基地址为a的内存 */
-				s[1+i.a] = s[t];
+			case sto:	
+				if(i.l == 0) s[b+i.a] = s[t];
+				else if(i.l == 1) s[t+i.a] = s[t];
+				break;
+			case stv:
+				s[b] = s[t];
 				break;
 			case ast:
 				t = t - 1;
-				s[s[t]+1] = s[t+1];
+				s[s[t]+b] = s[t+1];
+				s[t] = s[t+1];
 				break;
 			case ald:
-				s[t] = s[s[t]+1];
+				s[t] = s[s[t]+b];
 				break;
-			case cal:	/* 调用子过程 */
-				s[t + 1] = base(i.l, s, b);	/* 将父过程基地址入栈，即建立静态链 */
+			case cal:	        /* 调用子过程 */
+				s[t + 1] = 0;
 				s[t + 2] = b;	/* 将本过程基地址入栈，即建立动态链 */
 				s[t + 3] = p;	/* 将当前指令指针入栈，即保存返回地址 */
-				b = t + 1;	/* 改变基地址指针值为新过程的基地址 */
-				p = i.a;	/* 跳转 */
+				b = t + 1;	    /* 改变基地址指针值为新过程的基地址 */
+				p = i.a;	    /* 跳转 */
 				break;
-			case ini:	/* 在数据栈中为被调用的过程开辟a个单元的数据区 */
+			case ini:	
 				t = t + i.a;	
-				printf("STAt = %d\n",t);
 				break;
-			case jmp:	/* 直接跳转 */
+			case jmp:	
 				p = i.a;
 				break;
-			case jpc:	/* 条件跳转 */
+			case jpc:	
 				if (s[t] == 0) 
 					p = i.a;
 				t = t - 1;
@@ -741,20 +851,8 @@ void interpret()
 	fprintf(fout,"End X0\n");
 }
 
-int base(int l, int* s, int b)
-{
-	int b1;
-	b1 = b;
-	while (l > 0)
-	{
-		b1 = s[b1];
-		l--;
-	}
-	return b1;
-}
 
 int main(){
-    printf("Input file  ");
 	strcpy(fname,"test.txt");
     scanf("%s", fname);
     if((fin = fopen(fname, "r")) == NULL)
