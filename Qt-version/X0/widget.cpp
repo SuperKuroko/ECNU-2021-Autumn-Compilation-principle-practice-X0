@@ -295,21 +295,12 @@ void Widget::InitTextEdit()
     ycode->setPlaceholderText("中间代码");
 
     result = new QTextEdit(this);
-    result->move(2, 1050);
-    result->setFixedSize(1400,480);
+    result->move(2, 1000);
+    result->setFixedSize(1400,530);
     result->setFont(QFont("宋体",12));
     result->setReadOnly(true);
     result->setPlaceholderText("符号表");
 
-    xin = new QLineEdit(this);
-    xin->setFixedSize(1250, 50);
-    xin->move(2,978);
-    xin->setFont(QFont("宋体",12));
-    xin->setPlaceholderText("输入区");
-
-    confirm = new QPushButton("确认",this);
-    confirm->setFixedSize(130,50);
-    confirm->move(1272,978);
 }
 
 void Widget::InitVar()
@@ -330,6 +321,8 @@ void Widget::createFile()
     ycode->setText("");
     result->setText("");
     xcode->setReadOnly(false);
+    isSRun = false;
+    update();
 }
 
 void Widget::openFileDialog()
@@ -347,6 +340,8 @@ void Widget::openFileDialog()
         xcode->setText(QString::fromStdString(text));
         ycode->setText("");
         result->setText("");
+        isSRun = false;
+        update();
     }
 }
 
@@ -398,6 +393,8 @@ void Widget::closeFile()
     xcode->setText("");
     ycode->setText("");
     result->setText("");
+    isSRun = false;
+    update();
 }
 
 void Widget::displayTable()
@@ -508,6 +505,8 @@ void Widget::SingleRun()
     {
         if(sp == 0)
         {
+            QMessageBox::about(NULL, "编译信息", "指令已被全部执行完！");
+            pInfo->setText("执行完成");
             isSRun = false;
             fprintf(sout,"End X0\n");
             fclose(sout);
@@ -541,10 +540,48 @@ void Widget::BuildRun()
     pProgressBar->setValue(100);
     X0_Compiler(fileName.c_str());
     readXcode();
-    runXcode();
     displayTable();
     displayXcode();
+    runXcode();
 
+}
+
+void Widget::getInput(int mod, const char* info)
+{
+    while(true)
+    {
+        bool ok,f = true;
+        if(mod == 0)sin = QInputDialog::getText(this, tr("输入框"),
+                                             tr(info), QLineEdit::Normal,
+                                             "0", &ok).toStdString();
+        if(mod == 1)sin = QInputDialog::getText(this, tr("输入框"),
+                                             tr(info), QLineEdit::Normal,
+                                             "a", &ok).toStdString();
+        if(mod == 2)sin = QInputDialog::getText(this, tr("输入框"),
+                                             tr(info), QLineEdit::Normal,
+                                             "0", &ok).toStdString();
+        if(sin.empty())
+        {
+            QMessageBox::critical(NULL,  "错误",  "输入为空", QMessageBox::Ok);
+            continue ;
+        }
+        if(mod == 0 || mod == 2)
+        {
+            for(int i = 0;i < (int)sin.size();i++)
+            {
+                if(sin[i] < '0' || sin[i] > '9')
+                {
+                    f = false;
+                    break;
+                }
+            }
+        }
+        if(mod == 1 && sin.size() != 1) f = false;
+        if(f && ok)
+        {
+            break;
+        }
+    }
 }
 
 void Widget::runXcodeStepByStep()
@@ -616,6 +653,7 @@ void Widget::runXcodeStepByStep()
                 case 14:
                     if(si.l == 0)
                     {
+
                         fprintf(sout, "%d", s[st]);
                     }
                     else if(si.l == 1)
@@ -625,6 +663,7 @@ void Widget::runXcodeStepByStep()
                     }
                     else if(si.l == 2)
                     {
+
                         fprintf(sout,"%s",(s[st]==0)?"false":"true");
                     }
                     break;
@@ -636,17 +675,20 @@ void Widget::runXcodeStepByStep()
                     fprintf(sout, "?");
                     if(si.l == 0)
                     {
-                        scanf("%d", &(s[st]));
+                        getInput(0, "read a int:");
+                        s[st] = stoi(sin);
                         fprintf(sout, "%d\n", s[st]);
                     }
                     else if(si.l == 1)
                     {
-                        scanf(" %c", &(s[st]));
+                        getInput(1, "read a char:");
+                        s[st] = sin[0];
                         fprintf(sout, "%c\n", s[st]);
                     }
                     else
                     {
-                        scanf("%d", &(s[st]));
+                        getInput(2, "read a bool:");
+                        s[st] = stoi(sin);
                         fprintf(sout, "%d\n", s[st]);
                         if(s[st] != 0) s[st] = 1;
                     }
@@ -857,17 +899,20 @@ void Widget::runXcode()
                         fprintf(fout, "?");
                         if(i.l == 0)
                         {
-                            scanf("%d", &(s[t]));
+                            getInput(0, "read a int:");
+                            s[t] = stoi(sin);
                             fprintf(fout, "%d\n", s[t]);
                         }
                         else if(i.l == 1)
                         {
-                            scanf(" %c", &(s[t]));
+                            getInput(1, "read a char:");
+                            s[t] = sin[0];
                             fprintf(fout, "%c\n", s[t]);
                         }
                         else
                         {
-                            scanf("%d", &(s[t]));
+                            getInput(2, "read a bool:");
+                            s[t] = stoi(sin);
                             fprintf(fout, "%d\n", s[t]);
                             if(s[t] != 0) s[t] = 1;
                         }

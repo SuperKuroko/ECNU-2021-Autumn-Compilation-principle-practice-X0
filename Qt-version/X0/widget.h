@@ -23,6 +23,7 @@
 #include <iostream>
 #include <cstring>
 #include <algorithm>
+#include <QInputDialog>
 using namespace std;
 
 enum fct
@@ -47,6 +48,7 @@ class Widget : public QWidget
     Q_OBJECT
 
 public:
+    string sin;
     FILE* sout;
     instruction pcode[2000];
     int pi,sp,sb,st;
@@ -83,6 +85,7 @@ public:
     void runXcodeStepByStep();
     void refreshCode();
     void paintEvent(QPaintEvent*);
+    void getInput(int mod, const char *info);
     ~Widget();
 
 private slots:
@@ -99,5 +102,6 @@ private slots:
     void BuildRun();
     void AuthorInfo();
     void timeUpdate();
+
 };
 #endif // WIDGET_H
