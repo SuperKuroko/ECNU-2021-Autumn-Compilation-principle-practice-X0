@@ -1,0 +1,12 @@
+main
+{
+    int a;
+    char b;
+    bool c;
+    read a;
+    write a;
+    read b;
+    write b;
+    read c;
+    write c;
+}
