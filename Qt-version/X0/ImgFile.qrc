@@ -9,5 +9,16 @@
         <file>img/NewFile2.jpeg</file>
         <file>img/CloseFile.jpeg</file>
         <file>img/Exit.jpeg</file>
+        <file>img/Error.jpeg</file>
+        <file>img/Out.jpeg</file>
+        <file>img/Kuroko.png</file>
+        <file>img/Table.jpeg</file>
+        <file>img/HighLight.jpeg</file>
+        <file>img/Line.jpeg</file>
+        <file>img/Make.jpeg</file>
+        <file>img/MRun.jpeg</file>
+        <file>img/SRun.jpeg</file>
+        <file>img/CloseFile2.jpeg</file>
+        <file>img/Out2.jpeg</file>
     </qresource>
 </RCC>

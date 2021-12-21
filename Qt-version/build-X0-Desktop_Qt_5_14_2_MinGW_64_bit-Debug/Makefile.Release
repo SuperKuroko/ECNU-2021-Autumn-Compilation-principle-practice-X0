@@ -111,15 +111,26 @@ compiler_rcc_clean:
 	-$(DEL_FILE) release\qrc_ImgFile.cpp
 release/qrc_ImgFile.cpp: ../X0/ImgFile.qrc \
 		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/bin/rcc.exe \
-		../X0/img/Paste.jpeg \
-		../X0/img/NewFile.jpeg \
-		../X0/img/NewFile2.jpeg \
-		../X0/img/OpenFile.jpeg \
-		../X0/img/SaveAs.jpeg \
-		../X0/img/Exit.jpeg \
 		../X0/img/CloseFile.jpeg \
+		../X0/img/SaveAs.jpeg \
+		../X0/img/SRun.jpeg \
+		../X0/img/Out.jpeg \
+		../X0/img/Error.jpeg \
+		../X0/img/NewFile.jpeg \
+		../X0/img/Paste.jpeg \
+		../X0/img/Kuroko.png \
+		../X0/img/Table.jpeg \
+		../X0/img/SaveFile.jpeg \
+		../X0/img/HighLight.jpeg \
+		../X0/img/MRun.jpeg \
+		../X0/img/Out2.jpeg \
 		../X0/img/OpenFile2.jpeg \
-		../X0/img/SaveFile.jpeg
+		../X0/img/NewFile2.jpeg \
+		../X0/img/Exit.jpeg \
+		../X0/img/Line.jpeg \
+		../X0/img/CloseFile2.jpeg \
+		../X0/img/Make.jpeg \
+		../X0/img/OpenFile.jpeg
 	C:\Qt\Qt5.14.2\5.14.2\mingw73_64\bin\rcc.exe -name ImgFile ..\X0\ImgFile.qrc -o release\qrc_ImgFile.cpp
 
 compiler_moc_predefs_make_all: release/moc_predefs.h
@@ -265,6 +276,24 @@ release/moc_widget.cpp: ../X0/widget.h \
 		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qbasictimer.h \
 		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QDateTime \
 		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qdatetime.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/QMenu \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/QMessageBox \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qmessagebox.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qdialog.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/QFileDialog \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qfiledialog.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qdir.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qfileinfo.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/QTextEdit \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qtextedit.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qabstractscrollarea.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qtextdocument.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qtextcursor.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qtextformat.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/QPushButton \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qpushbutton.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/QLineEdit \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qlineedit.h \
 		release/moc_predefs.h \
 		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/bin/moc.exe
 	C:\Qt\Qt5.14.2\5.14.2\mingw73_64\bin\moc.exe $(DEFINES) --include C:/Users/Kuroko/Desktop/Kuroko/GitHub/ECNU-2021-Autumn-Compilation-principle-practice-X0/Qt-version/build-X0-Desktop_Qt_5_14_2_MinGW_64_bit-Debug/release/moc_predefs.h -IC:/Qt/Qt5.14.2/5.14.2/mingw73_64/mkspecs/win32-g++ -IC:/Users/Kuroko/Desktop/Kuroko/GitHub/ECNU-2021-Autumn-Compilation-principle-practice-X0/Qt-version/X0 -IC:/Qt/Qt5.14.2/5.14.2/mingw73_64/include -IC:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets -IC:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtGui -IC:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtANGLE -IC:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtCore -I. -IC:/Qt/Qt5.14.2/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++ -IC:/Qt/Qt5.14.2/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++/x86_64-w64-mingw32 -IC:/Qt/Qt5.14.2/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++/backward -IC:/Qt/Qt5.14.2/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include -IC:/Qt/Qt5.14.2/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include-fixed -IC:/Qt/Qt5.14.2/Tools/mingw730_64/x86_64-w64-mingw32/include ..\X0\widget.h -o release\moc_widget.cpp
@@ -424,6 +453,24 @@ release/main.o: ../X0/main.cpp ../X0/widget.h \
 		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qbasictimer.h \
 		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QDateTime \
 		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qdatetime.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/QMenu \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/QMessageBox \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qmessagebox.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qdialog.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/QFileDialog \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qfiledialog.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qdir.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qfileinfo.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/QTextEdit \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qtextedit.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qabstractscrollarea.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qtextdocument.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qtextcursor.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qtextformat.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/QPushButton \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qpushbutton.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/QLineEdit \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qlineedit.h \
 		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/QApplication \
 		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qapplication.h \
 		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qcoreapplication.h \
@@ -567,6 +614,24 @@ release/widget.o: ../X0/widget.cpp ../X0/widget.h \
 		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qbasictimer.h \
 		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QDateTime \
 		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qdatetime.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/QMenu \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/QMessageBox \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qmessagebox.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qdialog.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/QFileDialog \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qfiledialog.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qdir.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qfileinfo.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/QTextEdit \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qtextedit.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qabstractscrollarea.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qtextdocument.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qtextcursor.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qtextformat.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/QPushButton \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qpushbutton.h \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/QLineEdit \
+		C:/Qt/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qlineedit.h \
 		../X0/x0.tab.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o release\widget.o ..\X0\widget.cpp
 

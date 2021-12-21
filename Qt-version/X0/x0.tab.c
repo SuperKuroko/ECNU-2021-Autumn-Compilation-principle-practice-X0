@@ -1119,7 +1119,7 @@ case 34:
 		if(table[yyval.number].kind == function) yyerror("can't use function directly");
 		xt = table[yyval.number].X0_type;
 		Kind = table[yyval.number].kind;
-		printf("%s: %d",yyvsp[0].ident,Kind);
+        //printf("%s: %d",yyvsp[0].ident,Kind);
 	;
     break;}
 case 35:
@@ -1625,7 +1625,7 @@ yyerrhandle:
 
 void yyerror(const char *s){
 	err++;
-	printf("error:%s! located at %d line\n", s, line);
+    //printf("error:%s! located at %d line\n", s, line);
 	fprintf(fmistake, "error:%s! located at %d line\n", s, line);
 }
 
@@ -1726,7 +1726,7 @@ void display_pcode()
 	
     for (i = 0; i < pcode_pointer; i++)
     {
-        printf("%d %s %d %d\n", i, name[pcode[i].f], pcode[i].l, pcode[i].a);
+        //printf("%d %s %d %d\n", i, name[pcode[i].f], pcode[i].l, pcode[i].a);
         fprintf(fpcode,"%d %s %d %d\n", i, name[pcode[i].f], pcode[i].l, pcode[i].a);
     }
 }
@@ -1736,19 +1736,19 @@ void display_table()
 	int i;
 	char m1[][5] = {{"int "},{"char"},{"bool"}};
 	char m2[][10] = {{"variable"},{"  array "},{"function"}};
-    printf("num    name       kind       type     master   address   size\n");
-	
+    //printf("num    name       kind       type     master   address   size\n");
+    fprintf(ftable,"num    name       kind       type     master   address   size\n");
 	for (i = 1; i <= table_pointer; i++)
 	{   
 		if(table[i].kind == function && i > 1)
-		{
-			printf("\n",table[i].name);
+        {
+            //printf("\n",table[i].name);
 			fprintf(ftable,"\n",table[i].name);
 		}
-		printf("%2d     %4s     %s     %s     %4s      %3d      %3d\n",i,table[i].name,m2[table[i].kind],m1[table[i].X0_type],table[i].master,table[i].adr,table[i].size);
+        //printf("%2d     %4s     %s     %s     %4s      %3d      %3d\n",i,table[i].name,m2[table[i].kind],m1[table[i].X0_type],table[i].master,table[i].adr,table[i].size);
 		fprintf(ftable,"%2d     %4s     %s     %s     %4s      %3d      %3d\n",i,table[i].name,m2[table[i].kind],m1[table[i].X0_type],table[i].master,table[i].adr,table[i].size);
 	}
-	printf("\n");
+    //printf("\n");
 	fprintf(ftable, "\n");
 }
 
@@ -1760,7 +1760,7 @@ void interpret()
 	struct instruction i;
 	int s[stacksize];	
 
-	printf("Start X0\n");
+    //printf("Start X0\n");
 	fprintf(fout,"Start X0\n");
 	s[0] = 0; /* s[0]不用 */
 	s[1] = 0; /* SL */
@@ -1836,27 +1836,28 @@ void interpret()
 					case 14:
 						if(i.l == 0)
 						{
-							printf("%d", s[t]);
+                            //printf("%d", s[t]);
 							fprintf(fout, "%d", s[t]);
 						}
 						else if(i.l == 1)
 						{
-							printf("%c",s[t]);
+
+                            //printf("%c",s[t]);
 							fprintf(fout,"%c",s[t]);
 						}
 						else if(i.l == 2)
 						{
-							printf("%s",(s[t]==0)?"false":"true");
+                            //printf("%s",(s[t]==0)?"false":"true");
 							fprintf(fout,"%s",(s[t]==0)?"false":"true");
 						}
 						break;
 					case 15:
-						printf("\n");
+                        //printf("\n");
 						fprintf(fout,"\n");
 						break;
 					case 16:
 						t = t + 1;
-						printf("?");
+                        //printf("?");
 						fprintf(fout, "?");
 						if(i.l == 0)
 						{
@@ -1935,7 +1936,7 @@ void interpret()
 				break;
 		}
 	} while (p != 0);
-	printf("End X0\n");
+    //printf("End X0\n");
 	fprintf(fout,"End X0\n");
 }
 
@@ -1978,7 +1979,7 @@ void X0_Compiler(const char* file){
 
 	if(err == 0)
 	{
-		printf("\n===Parsing success!===\n");
+        //printf("\n===Parsing success!===\n");
 		fprintf(fmistake, "\n===Parsing success!===\n");
 
 		display_pcode();
@@ -1987,13 +1988,13 @@ void X0_Compiler(const char* file){
 		display_table();
 		fclose(ftable);
 		
-		interpret();      	
+        //interpret();
 		fclose(fout);
 	}
 
   	else
 	{
-		printf("%d errors in X0 program\n", err);
+        //printf("%d errors in X0 program\n", err);
 		fprintf(fmistake, "%d errors in X0 program\n", err);
 	}
 	fclose(fmistake);
