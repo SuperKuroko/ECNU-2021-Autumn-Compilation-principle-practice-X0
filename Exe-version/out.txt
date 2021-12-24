@@ -1,8 +1,0 @@
-Start X0
-false
-true
-true
-true
-true
-false
-End X0

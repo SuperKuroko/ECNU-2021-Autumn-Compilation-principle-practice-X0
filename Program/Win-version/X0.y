@@ -14,13 +14,10 @@
 
 	int table_pointer;
     int pcode_pointer;
-    int lev;
 	char bug[100];
 	char fname[20];
     char id[var_name_length];
 	char function_name[var_name_length];
-    int num;
-	int array_size;
 	int err;
 	int var_cnt;
 	int var_size;

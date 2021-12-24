@@ -1,0 +1,2 @@
+error:b is not a function! located at 6 line
+1 errors in X0 program
